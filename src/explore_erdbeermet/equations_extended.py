@@ -197,7 +197,7 @@ for x,y,z,u,v in permutations(indices,5):
         continue
 latex_str+="\\end{longtable}\n"
 latex_str=latex_str.replace("scriptstyle0", "scriptscriptstyle 0")
-with open("alphas.tex","w+") as tfile:
+with open(argv[2],"w+") as tfile:
     tfile.write(latex_str)
     
 # Show Latex pdf
