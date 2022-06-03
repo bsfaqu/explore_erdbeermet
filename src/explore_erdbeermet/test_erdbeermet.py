@@ -44,9 +44,7 @@ def rnf_candidates(candidates):
             if(candidates[k][k2]>1 or candidates[k][k2]<0):
                 acc_alpha+=abs(candidates[k][k2])
         sort_cand[k]=round(acc_alpha,3)
-  #  if(math.isclose(acc_alpha,0)):
-  #      agree_cand[k]=candidates[k]
-
+     
     # sort candidates by descending acc_alpha value
     sort_cand_out=sorted(sort_cand.items(),key=lambda x: x[1],reverse=True)
     
