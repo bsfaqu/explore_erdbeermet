@@ -223,8 +223,9 @@ class Box4:
         ax.set_aspect('equal')
         plt.axis('off')
         plt.tight_layout()
-        plt.show()
+        #plt.show()
 
+        plt.savefig("box.pdf") 
 
     @staticmethod
     def _draw_spike(ax, pos, label, r, s, d):

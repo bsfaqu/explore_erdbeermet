@@ -16,7 +16,8 @@ class Visualizer:
     info_dict = {'no pseodometric': r'no pseodometric',
                  'negative delta/dxy': r'negative $\delta$/$d_{xy}$',
                  'no candidate': r'no candidate',
-                 'spikes too short': r'spikes too short'}
+                 'spikes too short': r'spikes too short',
+                 'Loser': r'Loser'}
     
     def __init__(self, tree, decimal_prec=4, save_as=None):
         
@@ -40,7 +41,9 @@ class Visualizer:
         self.draw()
         
         if save_as:
-            self.fig.savefig(save_as)
+            self.fig.savefig(save_as) 
+            
+        plt.close()       
         
     
     def draw(self):
@@ -65,7 +68,7 @@ class Visualizer:
         ymin, ymax = self.ax.get_ylim()
         self.fig.set_size_inches(5*abs(xmax-xmin), 5*abs(ymax-ymin)+0.4)
         plt.tight_layout()
-        plt.show()
+        #plt.show()
         
     
     def initial_traversal(self):
@@ -180,6 +183,12 @@ class Visualizer:
                          horizontalalignment='left',
                          verticalalignment='bottom',
                          fontsize=self.fs)
+        if v.Divergence:
+            self.ax.text(x-self.edge_length+self.symbolsize/2+0.005, y-0.002,
+                         "Div="+str(v.Divergence),
+                         horizontalalignment='left',
+                         verticalalignment='top',
+                         fontsize=self.fs)            
     
     
     def write_abort_info(self, v):

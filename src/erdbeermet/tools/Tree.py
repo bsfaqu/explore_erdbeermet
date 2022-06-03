@@ -35,7 +35,7 @@ class TreeNode:
         this R-step (if this is the case).
     """
     
-    def __init__(self, n, V, D=None, R_step=None):
+    def __init__(self, n, V, D=None, R_step=None, Divergence=None):
         
         self.parent = None
         self.children = []
@@ -44,6 +44,7 @@ class TreeNode:
         self.V = V
         self.D = D
         self.R_step = R_step
+        self.Divergence = Divergence
         
         self.valid_ways = 0
         self.info = ''
@@ -55,7 +56,9 @@ class TreeNode:
         
         if self.R_step:
             token += '|({},{}:{}){:.4f}'.format(*self.R_step)
-        
+        if self.Divergence:
+            token += ' Div='+str(self.Divergence)
+            
         return token + '>>'
         
         

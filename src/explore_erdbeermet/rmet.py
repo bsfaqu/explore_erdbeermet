@@ -8,7 +8,7 @@ import pyvis.options
 import string
 import json
 import numpy
-from . import erdbeermet
+from erdbeermet import recognition as rec
 
 importfile=str(pathlib.Path().resolve())+"/"+argv[2]
 
@@ -160,8 +160,8 @@ net.set_options(
 """
 )
 net.show("pynet.html")
-subprocess.call("python explore_erdbeermet/test_erdbeermet.py " + argv[4], shell=True)
-subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+subprocess.call("python src/explore_erdbeermet/test_erdbeermet.py " + argv[4], shell=True)
+#subprocess.call("firefox src/erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
     
 # Let this point to your splitstree installation
 subprocess.call("/scratch/bruno/SplitsTree/splitstree4/./SplitsTreeCMD -c " + "splitstree_commands.nex" ,shell=True,stdout=subprocess.DEVNULL)

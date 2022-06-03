@@ -4,6 +4,8 @@ import numpy as np
 
 import erdbeermet.tools.FileIO as FileIO
 
+from numpy.random import Generator, PCG64
+
 
 class Scenario:
     """Scenario for the generation of a type R matrix.
@@ -109,7 +111,6 @@ class Scenario:
             delta_str = '[' + ','.join(str(d) for d in delta) + ']'
             print(f"({x}, {y}: {z}) {alpha}; {delta_str}")
     
-    
     def _build_matrix(self):
         """Generate the distance matrix and determine whether it is circular.
         """
@@ -178,7 +179,7 @@ class Scenario:
                     D[q, p] = D[p, q]
 
 
-def random_history(N, branching_prob=0.0, circular=False, clocklike=False):
+def random_history(N, branching_prob=0.0, circular=False, clocklike=False, generator=None, alpha_tol=0.01, delta_min=0.01):
     """Generate a random history of merge and branching events.
     
     Parameters
@@ -204,49 +205,84 @@ def random_history(N, branching_prob=0.0, circular=False, clocklike=False):
         Each tuple corresponds to an iteration comprising a merge or branching
         event and the distance increments.
     """
-    
     history = []
     
     if circular:
         successors = {0: 0}
     
-    for z in range(1, N):
+    if not generator:
+        for z in range(1, N):
         
-        # simple duplication event
-        if z == 1 or np.random.random() < branching_prob:
-            
-            x = np.random.randint(z)
-            y, alpha = x, 1.0           # for the history
+            # simple duplication event
+            if z == 1 or np.random.random() < branching_prob:
                 
-            if circular:
-                y = successors[x]
-                successors[x] = z
-                successors[z] = y
-                
-        # recombination event      
-        else:
-            if not circular:
-                x, y = np.random.choice(z, size=2, replace=False)
-            else:
                 x = np.random.randint(z)
-                y = successors[x]
-                successors[x] = z
-                successors[z] = y
-                
-            alpha = np.random.random()
+                y, alpha = x, 1.0           # for the history
+                    
+                if circular:
+                    y = successors[x]
+                    successors[x] = z
+                    successors[z] = y
+                    
+            # recombination event      
+            else:
+                if not circular:
+                    x, y = np.random.choice(z, size=2, replace=False)
+                else:
+                    x = np.random.randint(z)
+                    y = successors[x]
+                    successors[x] = z
+                    successors[z] = y
+                    
+                alpha = np.random.random() * (1 - 2*alpha_tol) + alpha_tol
+            
+            # distance increment, i.e., independent evolution after event
+            if not clocklike:
+                delta = (np.random.exponential(scale=1/N, size=z+1) + delta_min)
+            else:
+                delta = (np.random.exponential(scale=1/N) + delta_min)* np.ones((z+1,)) 
+                    
+            history.append( (x, y, z, alpha, delta) )
+
+    # random seed generator
+    else:
+        for z in range(1, N):
         
-        # distance increment, i.e., independent evolution after event
-        if not clocklike:
-            delta = np.random.exponential(scale=1/N, size=z+1)
-        else:
-            delta = np.random.exponential(scale=1/N) * np.ones((z+1,))
+            # simple duplication event
+            if z == 1 or generator.random() < branching_prob:
                 
-        history.append( (x, y, z, alpha, delta) )
-    
+                x = generator.integers(z)
+                y, alpha = x, 1.0           # for the history
+                    
+                if circular:
+                    y = successors[x]
+                    successors[x] = z
+                    successors[z] = y
+                    
+            # recombination event      
+            else:
+                if not circular:
+                    x, y = generator.choice(z, size=2, replace=False)
+                else:
+                    x = generator.integers(z)
+                    y = successors[x]
+                    successors[x] = z
+                    successors[z] = y
+                    
+                alpha = generator.random()
+            
+            # distance increment, i.e., independent evolution after event
+            if not clocklike:
+                delta = generator.exponential(scale=1/N, size=z+1)
+            else:
+                delta = generator.exponential(scale=1/N) * np.ones((z+1,))
+                    
+            history.append( (x, y, z, alpha, delta) )
+
     return history
 
 
-def simulate(N, branching_prob=0.0, circular=False, clocklike=False):
+def simulate(N, branching_prob=0.0, circular=False, clocklike=False, generator=None, alpha_tol=0.01, delta_min=0.01):
     """Simulate a random type R matrix.
     
     Parameters
@@ -279,7 +315,10 @@ def simulate(N, branching_prob=0.0, circular=False, clocklike=False):
     
     return Scenario(random_history(N, branching_prob=branching_prob,
                                    circular=circular,
-                                   clocklike=clocklike))
+                                   clocklike=clocklike,
+                                   generator=generator,
+                                   alpha_tol=alpha_tol,
+                                   delta_min=delta_min))
 
 
 def scenario_from_history(history, stop_after=False):

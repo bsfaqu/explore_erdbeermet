@@ -126,7 +126,7 @@ curr_N=len(scenario_string.split("\n"))-1
 curr_D=[]
 curr_V=[]
 
-subprocess.call("firefox erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+subprocess.call("firefox src/erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
 overview_str=""
 while True:
     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
