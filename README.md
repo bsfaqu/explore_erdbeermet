@@ -1,3 +1,72 @@
+
+# New functions
+
+Two executable scripts were added in the src/explore_erdbeermet package.
+
+* rmet.py
+* equations_extended.py
+
+## rmet.py
+Is intended to allow for an interactive exploration of the algorithm erdbeermet utilizes.
+It loads a scenario (custom format) from a file and applies the erdbeermet recognition algorithm. A network visualization, the usual .pdf output from erdbeermet, and a splitstree image is generated.
+
+### Example vis (of star1 example):
+#### Splitstree:
+![image](https://user-images.githubusercontent.com/60860433/171909513-c62b8c36-230d-4930-b1e6-0ce60691d8ae.png)
+#### Network:
+![image](https://user-images.githubusercontent.com/60860433/171909619-8eb8741c-8004-458d-a057-ca92204d3322.png)
+
+
+### Usage:
+Execute from base directory:
+
+```python src/explore_erdbeermet/rmet.py <SCENARIO-FILE> <NEXUS-OUTPUT(SplitsTree)> <PNG-OUTPUT(SplitsTree)> <SIMFILE-OUTPUT>```
+
+This simple example reads the star scenario that is provided in the examples folder and writes all output to the output folder:
+
+```python src/explore_erdbeermet/rmet.py examples/explore_erdbeermet/star1 output/star.nex output/star.png output/simfile_star```
+
+Follow the instructions in the command prompt to explore the scenario you have loaded. Usually, you are presented with a list of possible Reverse-R-step candidates which are sorted by the sum of invalid alphas (over all witness combinations). Generally, two options are availiable:
+
+* Perform reverse R-step (permanent for current run; scenario files are not altered)
+* (temporarily) hybridize/spike some valid "alpha pairs"
+
+The first options is straight forward whereas the second option promts you to select *2* candidates which parent nodes are then hybridized. Happy testing!
+
+You may be required to change the SplitsTree4 path in rmet.py to point to your SplitsTree4 installation to produce the SplitsTree images. 
+
+## equations_extended.py
+Symbolically computes an R matrix from a given scenario file. Every distance beyond the first four leaves is computed as a term of the distances of the root leaves (first four). The distance d_0xy correspond to distances of the first four leaves. The variables del0_e, del_1, etc. correspond to deltas at the corresponding R-Steps (index start at R-Step 5; hence del0_e is the delta applied to e at the fifth R-Step). This concept carries over to alphas, e.g. a0, a1, etc.. A LaTeX .pdf as well as a console output containing the alpha-formulas for reverse R steps with respect to different witnesses is presented.
+
+### Example Output:
+#### LaTeX:
+![image](https://user-images.githubusercontent.com/60860433/171909933-07f78752-a7b5-4206-b3cf-0640e1340092.png)
+#### Console
+![image](https://user-images.githubusercontent.com/60860433/171910020-a86432e3-3641-4389-a728-df39b1c66332.png)
+
+
+### Usage:
+Execute script from any directory and pass the scenario file as the first argument, and the output .tex file as the second argument. 
+
+```python equations_extended.py <PATH-TO-SCEN-FILE> <OUT.TEX>```
+
+A simple call from the base directory with the star example would be:
+
+```python src/explore_erdbeermet/equations_extended.py examples/explore_erdbeermet/star1 output/star.tex```
+
+### Altered Format of Scenario files:
+```
+a,b,c,d,e,f             # first row contains symbols for elements
+a                       # second row contains starting leaf
+a,a,b;1,0,0,1           # all following rows describe R-Steps
+a,b,c;0.5,0,0,1         # i.e. x,y,z;alpha,deltax,deltay,deltaz
+a,b,d;0.5,0,0,1
+b,c,e;0.5,0,0,1
+a,e,f;0.5,0,0,1         # empty lines at the end lead to termintation 
+```
+
+---
+
 # Erdbeermet
 
 A Python library for generating, visualizing, manipulating and recognizing type R (pseudo)metrics
