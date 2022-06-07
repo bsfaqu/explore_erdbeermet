@@ -201,7 +201,7 @@ def _compute_alpha(V, D, x, y, z, u, v):
     numerator   = (D[u,z] + D[v,y]) - (D[v,z] + D[u,y])
     denominator = (D[u,x] + D[v,y]) - (D[v,x] + D[u,y])
     
-    #print(f'({x},{y}:{z}),u={u},v={v}:   ({D[u,z]} + {D[v,y]}) - ({D[v,z]} + {D[u,y]})  // ({D[u,x]} + {D[v,y]}) - ({D[v,x]} + {D[u,y]}) = {numerator} // {denominator} = {numerator / denominator}')
+    print(f'({x},{y}:{z}),u={u},v={v}:   ({D[u,z]} + {D[v,y]}) - ({D[v,z]} + {D[u,y]})  // ({D[u,x]} + {D[v,y]}) - ({D[v,x]} + {D[u,y]}) = {numerator} // {denominator} = {numerator / denominator}')
     
     if not np.isclose(denominator, 0.0, rtol=glob_rtol, atol=glob_atol):
         return numerator / denominator
@@ -218,7 +218,7 @@ def _compute_alpha_xoff(V, D, x, y, z, u, v):
     numerator   = (D[u,z] + D[v,y]) - (D[v,z] + D[u,y])
     denominator = (D[u,x] + D[v,y]) - (D[v,x] + D[u,y])
     
-    #print(f'({x},{y}:{z}),u={u},v={v}:   ({D[u,z]} + {D[v,y]}) - ({D[v,z]} + {D[u,y]})  // ({D[u,x]} + {D[v,y]}) - ({D[v,x]} + {D[u,y]}) = {numerator} // {denominator} = {numerator / denominator}')
+    print(f'({x},{y}:{z}),u={u},v={v}:   ({D[u,z]} + {D[v,y]}) - ({D[v,z]} + {D[u,y]})  // ({D[u,x]} + {D[v,y]}) - ({D[v,x]} + {D[u,y]}) = {numerator} // {denominator} = {numerator / denominator}')
     
     if not np.isclose(denominator, 0.0, rtol=glob_rtol, atol=glob_atol):
         if numerator/denominator==-0.0:
