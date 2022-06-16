@@ -457,11 +457,6 @@ def add_child(D_in,x,y,z,alpha,delta):
     D=np.zeros((len(D_in)+1, len(D_in)+1))
     #print(len(D_in))
     #print(len(D))
-    print(x)
-    print(y)
-    print(z)
-    print(alpha)
-    print(delta)
     for i in range(0,len(D_in)):
         for j in range(0,len(D_in)):
             D[i, j]=D_in[i, j]
@@ -476,7 +471,7 @@ def add_child(D_in,x,y,z,alpha,delta):
         D[x, z] = 0.0
         D[z, x] = 0.0
         
-        for u in range(0,len(D_in)):
+        for u in range(0,z):
             if( u==z ):
                 continue
             D[u, z] = D[u, x]

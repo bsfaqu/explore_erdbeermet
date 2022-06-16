@@ -177,8 +177,8 @@ indices=[x for x in range(0,len(matrix))]
 counter=0
 
 # LaTeX preamble and table init
-preamble="\\documentclass[12pt]{article}\\usepackage{amsmath,amsfonts}\n\\usepackage{longtable}\n\\usepackage{enumerate}\n\\begin{document}\n"
-latex_str="\\renewcommand*{\\arraystretch}{2.3}\\begin{longtable}{l|c}\\hline\n"
+preamble="\\documentclass[12pt]{article}\n\\usepackage[a3paper]{geometry}\n\\usepackage{amsmath,amsfonts}\n\\usepackage{longtable}\n\\usepackage{enumerate}\n\\begin{document}\n"
+latex_str="\\renewcommand*{\\arraystretch}{2.3}\n\\begin{longtable}{l|c}\\hline\n"
 init_printing()
 
 # output all the alpha-calculation combinations
@@ -198,7 +198,7 @@ for x,y,z,u,v in permutations(indices,5):
 latex_str+="\\end{longtable}\n"
 latex_str=latex_str.replace("scriptstyle0", "scriptscriptstyle 0")
 with open(argv[2],"w+") as tfile:
-    tfile.write(latex_str)
+    tfile.write(preamble+latex_str+"\\end{document}")
     
 # Show Latex pdf
 preview(latex_str,output="pdf",filename="alphas.pdf",preamble=preamble,euler=False)
