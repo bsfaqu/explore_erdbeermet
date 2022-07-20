@@ -8,7 +8,7 @@ import pyvis.options
 import string
 import json
 import numpy
-from erdbeermet import recognition as rec
+from erdbeermet_pkg import recognition as rec
 
 importfile=str(pathlib.Path().resolve())+"/"+argv[2]
 
@@ -40,7 +40,7 @@ for t in range(2,len(lines)-1):
     # Parse part of each insert line
     insert=lines[t].split(";")[0]
     params=lines[t].split(";")[1]
-    
+
     # Parse parents and child instruction and transl
     lparent=nodes[insert.split(",")[0]]
     rparent=nodes[insert.split(",")[1]]
@@ -92,10 +92,10 @@ for t in range(2,len(lines)-1):
                if(x==lparent or y==lparent):
                    dist[x][y]+=dl
                    dist[y][x]+=dl
-               if(x==rparent or y==rparent): 
+               if(x==rparent or y==rparent):
                    dist[x][y]+=dr
                    dist[y][x]+=dr
-               if(x==child or y==child): 
+               if(x==child or y==child):
                    dist[x][y]+=dc
                    dist[y][x]+=dc
 dist_str=""
@@ -106,8 +106,8 @@ for x in range(0,len(dist)):
         else:
             dist_str+="\t"
     dist_str+="\n"
-    
-print(dist_str) 
+
+print(dist_str)
 last_e=len(dist)-1
 my_np_arr=numpy.asarray(dist)
 for x in range(0,len(dist)-1):
@@ -162,9 +162,7 @@ net.set_options(
 net.show("pynet.html")
 subprocess.call("python src/explore_erdbeermet/test_erdbeermet.py " + argv[4], shell=True)
 #subprocess.call("firefox src/erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
-    
+
 # Let this point to your splitstree installation
 subprocess.call("/scratch/bruno/SplitsTree/splitstree4/./SplitsTreeCMD -c " + "splitstree_commands.nex" ,shell=True,stdout=subprocess.DEVNULL)
 subprocess.call("xdg-open "+argv[3],shell=True,stdout=subprocess.DEVNULL)
-
-

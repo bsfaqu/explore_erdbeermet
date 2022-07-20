@@ -1,5 +1,5 @@
-from erdbeermet import simulation as sim
-from erdbeermet import recognition as rec
+from erdbeermet_pkg import simulation as sim
+from erdbeermet_pkg import recognition as rec
 from contextlib import redirect_stdout
 import numpy as np
 from decimal import Decimal as d
@@ -20,10 +20,10 @@ def init_scenario(filepath):
         with redirect_stdout(f):
             print("============================================== ALL")
             tree = rec.recognize(D=scenario.D, B=[], first_candidate_only=False, small_spike=False, print_info=True)
-            #valid_divs, invalid_divs = classify_divergence(tree)         
+            #valid_divs, invalid_divs = classify_divergence(tree)
             print("============================================== WP3")
-            tree3 = rec.recognize(D=scenario.D, B=[0,1,2,3], first_candidate_only=True, small_spike=False, print_info=True)    
-            fail_wp3 = True if tree3.root.valid_ways == 0 else False  
+            tree3 = rec.recognize(D=scenario.D, B=[0,1,2,3], first_candidate_only=True, small_spike=False, print_info=True)
+            fail_wp3 = True if tree3.root.valid_ways == 0 else False
     tree.visualize(save_as='output/vis_all.pdf')
     return candidates
 
@@ -37,7 +37,7 @@ def init_scenario_sel(filepath,in_candidates):
     # rank_candidates finds alpha values for every possible rev tuple
     candidates=rec.rank_candidates_selective(scenario.D,V,in_candidates)
     return candidates
-    
+
 def rnf_candidates(candidates):
     sort_cand={}
     agree_cand=[]
@@ -48,20 +48,20 @@ def rnf_candidates(candidates):
             if(candidates[k][k2]>1 or candidates[k][k2]<0):
                 acc_alpha+=abs(candidates[k][k2])
         sort_cand[k]=round(acc_alpha,3)
-     
+
     # sort candidates by descending acc_alpha value
     sort_cand_out=sorted(sort_cand.items(),key=lambda x: x[1],reverse=True)
-    
+
     # We count consensus of alphas per candidate
     for k in sort_cand_out:
-        
+
         # We format the consens in a print string
         print_str=""
         print_str += str(k[0])+" - " + str(k[1]) + " || "
         # finding the number of witnesses that agree on an alpha is
         # a lot easier when the witnesses are sorted by their alpha
         sorted_c=sorted(candidates[k[0]].items(),key=lambda x: x[1])
-        
+
         # saving the last occured alpha, and its support in the tuple
         last_comp=("notset",0)
         nan_counter=0
@@ -319,7 +319,7 @@ while True:
                             D_copy=rec.add_child(D_copy.copy(),parents[s[0]],parents[s[1]],next_N,0.5,dt)
                             next_N=next_N+1
                     rnf_candidates(rec.rank_candidates_selective(D_copy,V,comp_cand))
-                    
+
             if('g' in dec_string or 'g' in dec_string):
                 for i in range(0,len(agree_cand)):
                     print("["+str(i)+"] - " + str(agree_cand[i]))
@@ -535,17 +535,17 @@ while True:
                 print("HYBRIDIZATION - " + "("+str(parent[0])+", "+str(parent[1])+": "+str(next_N)+")")
                 D_copy2=rec.add_child(D_copy.copy(),parent[0],parent[1],next_N,0.5,dt)
                 rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand]))
-                
+
                 print("-----------------------------------------------------")
                 print("HYBRIDIZATION - " + "("+str(parent[0])+", "+str(parent[2])+": "+str(next_N)+")")
                 D_copy2=rec.add_child(D_copy.copy(),parent[0],parent[2],next_N,0.5,dt)
                 rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand]))
-                
+
                 print("-----------------------------------------------------")
                 print("HYBRIDIZATION - " + "("+str(parent[1])+", "+str(parent[2])+": "+str(next_N)+")")
                 D_copy2=rec.add_child(D_copy.copy(),parent[1],parent[2],next_N,0.5,dt)
                 rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand]))
-                
+
                 #for i in range(0,len(D_copy)):
                 #    for j in range(0,len(D_copy)):
                 #        if((i==x and j!=x) or (i!=x and j==x)):
@@ -554,18 +554,18 @@ while True:
                 print("SPIKE - " + "("+str(parent[0])+", "+str(parent[0])+": "+str(next_N)+")")
                 D_copy2=rec.add_child(D_copy.copy(),parent[0],parent[0],next_N,0.5,dt)
                 rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand]))
-                
-                
+
+
                 print("-----------------------------------------------------")
                 print("SPIKE - " + "("+str(parent[1])+", "+str(parent[1])+": "+str(next_N)+")")
                 D_copy2=rec.add_child(D_copy.copy(),parent[1],parent[1],next_N,0.5,dt)
                 rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand]))
-                
+
                 print("-----------------------------------------------------")
                 print("SPIKE - " + "("+str(parent[2])+", "+str(parent[2])+": "+str(next_N)+")")
                 D_copy2=rec.add_child(D_copy.copy(),parent[2],parent[2],next_N,0.5,dt)
                 rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand]))
-                
+
                 print("-----------------------------------------------------")
                 print("SPIKE - " + "("+str(parent[0])+", "+str(parent[0])+": "+str(next_N)+")")
                 print("SPIKE - " + "("+str(parent[1])+", "+str(parent[1])+": "+str(next_N)+")")
@@ -606,12 +606,12 @@ while True:
                 print("DELTA_Z: "+ str(del_z3))
                 ########## ADD DUMMY CHILD!!!!!!!!!!!!!!!
                 #D_copy2=rec.add_child(D_copy.copy(),parent[2],parent[2],next_N,0.5,dt)
-                
+
                 #V+=[len(V)]
                 #dt+=[0.0]
                 #rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand]))
                 #D_copy2=rec.add_child(D_copy2.copy(),parent[1],parent[1],next_N+1,0.5,dt)
-                
+
                 #V+=[len(V)]
                 #dt+=[0.0]
                 #for i in range(0,len(V)-1):
@@ -690,4 +690,4 @@ while True:
                             break
                         #rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand,(comp_cand[0],comp_cand[1],next_N)]))
     else:
-        break     
+        break
