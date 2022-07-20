@@ -6,6 +6,23 @@ Two executable scripts were added in the src/explore_erdbeermet package.
 * rmet.py
 * equations_extended.py
 
+## Required packages
+
+Currently explore_erdbeermet relies on some external python packages:
+
+```
+pip install pyvis
+pip install pathlib
+pip intall numpy
+pip intall contextlib
+pip install sympy
+pip install texttable
+pip install itertools
+```
+
+should do the trick.
+
+
 ## rmet.py
 Is intended to allow for an interactive exploration of the algorithm erdbeermet utilizes.
 It loads a scenario (custom format) from a file and applies the erdbeermet recognition algorithm. A network visualization, the usual .pdf output from erdbeermet, and a splitstree image is generated.
@@ -26,14 +43,24 @@ This simple example reads the star scenario that is provided in the examples fol
 
 ```python src/explore_erdbeermet/rmet.py examples/explore_erdbeermet/star1 output/star.nex output/star.png output/simfile_star```
 
-Follow the instructions in the command prompt to explore the scenario you have loaded. Usually, you are presented with a list of possible Reverse-R-step candidates which are sorted by the sum of invalid alphas (over all witness combinations). Generally, two options are availiable:
+Follow the instructions in the command prompt to explore the scenario you have loaded.
 
-* Perform reverse R-step (permanent for current run; scenario files are not altered)
-* (temporarily) hybridize/spike some valid "alpha pairs"
+At each step, rmet.py outputs a list of possible Reverse-R-step candidates which are sorted by the sum of invalid alphas (over all witness combinations). All possible candidates are outputted and you find the "valid-alpha-candidates" at the bottom of the list. Each candidate is represented as:
 
-The first options is straight forward whereas the second option promts you to select *2* candidates which parent nodes are then hybridized. Happy testing!
+```
+(x,y:z) - [sum_invalid_alphas] || alpha_1:#support ... alpha_n:#support
+```
 
-You may be required to change the SplitsTree4 path in rmet.py to point to your SplitsTree4 installation to produce the SplitsTree images. 
+When you scroll up further, the steps in calculating the alphas for each candidate is outputted. Generally, four options are availiable:
+
+* press R - Perform reverse R-step (permanent for current run; scenario files are not altered)
+* press C - to compare 2 candidates by (temporarily) hybridizing/spike some valid candidates and observe the alphas these new witnesses yield. Each spike/hybridization is presented in a separate output section.
+* press S - to examine a single candidate rev-R-step. New alphas for hybridization and the corresponding calculations are outputted as well as the deltas for this R-step (across different witnesses). Output is similar to "C".
+* press G - to examine a group of candidates, i.e. 1,2:3 ; 1,2:4 ; 1,2:0 to apply the procedure of reverse-alpha-checking to these pairs.
+
+Most options require further input from the user, i.e. to choose candidates to examine. Input prompts should be self explainatory.
+
+You may be required to change the SplitsTree4 path in rmet.py to point to your SplitsTree4 installation to produce the SplitsTree images (LINE 167 in src/explore_erdbeermet/rmet.py).
 
 ## equations_extended.py
 Symbolically computes an R matrix from a given scenario file. Every distance beyond the first four leaves is computed as a term of the distances of the root leaves (first four). The distance d_0xy correspond to distances of the first four leaves. The variables del0_e, del_1, etc. correspond to deltas at the corresponding R-Steps (index start at R-Step 5; hence del0_e is the delta applied to e at the fifth R-Step). This concept carries over to alphas, e.g. a0, a1, etc.. A LaTeX .pdf as well as a console output containing the alpha-formulas for reverse R steps with respect to different witnesses is presented.
@@ -46,7 +73,7 @@ Symbolically computes an R matrix from a given scenario file. Every distance bey
 
 
 ### Usage:
-Execute script from any directory and pass the scenario file as the first argument, and the output .tex file as the second argument. 
+Execute script from any directory and pass the scenario file as the first argument, and the output .tex file as the second argument.
 
 ```python equations_extended.py <PATH-TO-SCEN-FILE> <OUT.TEX>```
 
@@ -62,8 +89,12 @@ a,a,b;1,0,0,1           # all following rows describe R-Steps
 a,b,c;0.5,0,0,1         # i.e. x,y,z;alpha,deltax,deltay,deltaz
 a,b,d;0.5,0,0,1
 b,c,e;0.5,0,0,1
-a,e,f;0.5,0,0,1         # empty lines at the end lead to termintation 
+a,e,f;0.5,0,0,1         # empty lines at the end lead to termintation
 ```
+
+##basic_eq.py
+
+Is supposed to be imported (from basic_eq import *) to manually manipulate or calculate alphas. It is loaded with a baseline scenario on 5 leaves. x,y,u and v are the origin leaves and z is added as (x,y:z). You can calculate alpha by invoking calc_a(). See the script for the parameters. Symbolic distance variables can be accessed, e.g., as xy0, uv0, uz1, xz1, etc. . The distance variables are "lexiographic" - ux0 can be accessed, xu0 is not defined.
 
 ---
 

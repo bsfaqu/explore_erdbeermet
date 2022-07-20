@@ -137,7 +137,7 @@ while True:
     if('c' in dec_string or 'C' in dec_string):
         print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         for i in range(0,len(agree_cand)):
-            print("["+str(i)+"] - " + str(agree_cand[i]))
+            print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
         cand_string=input("Please Enter two number (i.e. 1,2) to test candidates against each other.\n")
         #print(cand_string)
         comp_cand=[agree_cand[int(x.strip())] for x in cand_string.split(",")]
@@ -212,6 +212,7 @@ while True:
             #print(overview_str)
     elif("r" in dec_string or "R" in dec_string):
         r_cand_string=input("Please Enter ONE number (i.e. 0) to remove a candidate pair.\n")
+        print(r_cand_string)
         r_cand=agree_cand[int(r_cand_string.strip())]
         r_alpha=agree_cand_alphas[int(r_cand_string.strip())]
         with open("rmet_tmp_scen","w+") as f:
@@ -257,7 +258,7 @@ while True:
             if('c' in dec_string or 'C' in dec_string):
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 for i in range(0,len(agree_cand)):
-                    print("["+str(i)+"] - " + str(agree_cand[i]))
+                    print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
                 cand_string=input("Please Enter two number (i.e. 1,2) to test candidates against each other.\n")
                 comp_cand=[agree_cand[int(x.strip())] for x in cand_string.split(",")]
                 parents=[comp_cand[0][0],comp_cand[0][1],comp_cand[1][0],comp_cand[1][1]]
@@ -321,8 +322,9 @@ while True:
                     rnf_candidates(rec.rank_candidates_selective(D_copy,V,comp_cand))
 
             if('g' in dec_string or 'g' in dec_string):
+                print(agree_cand_alphas)
                 for i in range(0,len(agree_cand)):
-                    print("["+str(i)+"] - " + str(agree_cand[i]))
+                    print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 cand_string=input("Please enter candidates to check, comma separated.")
                 comp_cand=[agree_cand[int(x.strip())] for x in cand_string.split(",")]
@@ -507,7 +509,7 @@ while True:
             elif('s' in dec_string or 'S' in dec_string):
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 for i in range(0,len(agree_cand)):
-                    print("["+str(i)+"] - " + str(agree_cand[i]))
+                    print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
                 cand_string=input("Please Enter a number (i.e. 1) to test a candidate.\n")
                 cand=int(cand_string.strip())
                 comp_cand=agree_cand[cand]

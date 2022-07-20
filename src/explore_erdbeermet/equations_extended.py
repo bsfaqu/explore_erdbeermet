@@ -40,7 +40,7 @@ with open(argv[1],"r") as f:
 
 # init nodes, labels, visited nodes and distance matrix
 nodes={}
-labels=[]    
+labels=[]
 in_nodes=lines[0].split(",")
 start_node=lines[1]
 seen = []
@@ -67,15 +67,15 @@ for t in range(2,len(lines)-1):
     # Parse part of each insert line
     insert=lines[t].split(";")[0]
     params=lines[t].split(";")[1]
-    
+
     # Parse parents and child instruction
     lparent=insert.split(",")[0]
     rparent=insert.split(",")[1]
     child=insert.split(",")[2]
-    
+
     # Append new node to seen
     seen += [child]
-    
+
     # Initialize matrix with "base distance" d0xy
     # For the root once we reached iteration 4
     if(iterations==4):
@@ -89,38 +89,38 @@ for t in range(2,len(lines)-1):
                     exec("d0"+seen[y]+seen[x]+" = symbols("+"\"d0"+seen[y]+seen[x]+"\")")
                     matrix[x][y]=eval("d0"+seen[y]+seen[x])
                     matrix[y][x]=eval("d0"+seen[y]+seen[x])
-                    
+
                     # latex formulas
                     exec("ld0"+seen[x]+seen[y]+" = symbols("+"\"d^{\\scriptstyle0}_{"+seen[x]+""+seen[y]+"}\")")
                     exec("ld0"+seen[y]+seen[x]+" = symbols("+"\"d^{\\scriptstyle0}_{"+seen[y]+""+seen[x]+"}\")")
                     lmatrix[x][y]=eval("ld0"+seen[y]+seen[x]+"")
                     lmatrix[y][x]=eval("ld0"+seen[y]+seen[x]+"")
-                    
+
     # Update the matrix when were beyond the root construction
     elif(iterations>4):
         # Save updated values in updated matrix
         matrix_update=matrix.copy()
         lmatrix_update=lmatrix.copy()
-        
+
         ####### CONSOLE OUT #########
          # Declare symbolic alpha for corresponding R-Step
         exec("a"+str(iterations-4)+"=symbols("+"\"a"+str(iterations-4)+"\")")
-        
+
         # Declare symbolic deltas for corresponding R-Step
         exec("del"+str(iterations-4)+"_"+lparent+"=symbols("+"\"del"+str(iterations-4)+"_"+lparent+"\")")
         exec("del"+str(iterations-4)+"_"+rparent+"=symbols("+"\"del"+str(iterations-4)+"_"+rparent+"\")")
         exec("del"+str(iterations-4)+"_"+child+"=symbols("+"\"del"+str(iterations-4)+"_"+child+"\")")
-        
-        
+
+
         ####### LATEX OUT #########
         # Declare symbolic alpha for corresponding R-Step
         exec("la"+str(iterations-4)+"=symbols("+"\"alpha_"+str(iterations-4)+"\")")
-        
+
         # Declare symbolic deltas for corresponding R-Step
         exec("ldel"+str(iterations-4)+"_"+lparent+"=symbols("+"\"\\delta^"+str(iterations-4)+"_{"+lparent+"}\")")
         exec("ldel"+str(iterations-4)+"_"+rparent+"=symbols("+"\"\\delta^"+str(iterations-4)+"_{"+rparent+"}\")")
         exec("ldel"+str(iterations-4)+"_"+child+"=symbols("+"\"\\delta^"+str(iterations-4)+"_{"+child+"}\")")
-        
+
         #R1 - hybridization
         for x in range(0,len(seen)):
             if(seen[x]==child):
@@ -130,11 +130,11 @@ for t in range(2,len(lines)-1):
                 ####### CONSOLE OUT #########
                 matrix_update[x][nodes[child]]=matrix[x][nodes[lparent]]*eval("a"+str(iterations-4)) + matrix[x][nodes[rparent]]*(1-eval("a"+str(iterations-4)))
                 matrix_update[nodes[child]][x]=matrix[x][nodes[lparent]]*eval("a"+str(iterations-4)) + matrix[x][nodes[rparent]]*(1-eval("a"+str(iterations-4)))
-                
+
                 ####### LATEX OUT #########
                 lmatrix_update[x][nodes[child]]=lmatrix[x][nodes[lparent]]*eval("la"+str(iterations-4)) + lmatrix[x][nodes[rparent]]*(1-eval("la"+str(iterations-4)))
                 lmatrix_update[nodes[child]][x]=lmatrix[x][nodes[lparent]]*eval("la"+str(iterations-4)) + lmatrix[x][nodes[rparent]]*(1-eval("la"+str(iterations-4)))
-        
+
         #R2 - mutation
         for x in range(0,len(seen)):
             for y in range(x+1,len(seen)):
@@ -144,7 +144,7 @@ for t in range(2,len(lines)-1):
                     ####### CONSOLE OUT #########
                     matrix_update[x][y]+=eval("del"+str(iterations-4)+"_"+lparent)
                     matrix_update[y][x]+=eval("del"+str(iterations-4)+"_"+lparent)
-                    
+
                     ####### LATEX OUT #########
                     lmatrix_update[x][y]+=eval("ldel"+str(iterations-4)+"_"+lparent)
                     lmatrix_update[y][x]+=eval("ldel"+str(iterations-4)+"_"+lparent)
@@ -152,7 +152,7 @@ for t in range(2,len(lines)-1):
                     ####### CONSOLE OUT #########
                     matrix_update[x][y]+=eval("del"+str(iterations-4)+"_"+rparent)
                     matrix_update[y][x]+=eval("del"+str(iterations-4)+"_"+rparent)
-                    
+
                     ####### LATEX OUT #########
                     lmatrix_update[x][y]+=eval("ldel"+str(iterations-4)+"_"+rparent)
                     lmatrix_update[y][x]+=eval("ldel"+str(iterations-4)+"_"+rparent)
@@ -160,15 +160,15 @@ for t in range(2,len(lines)-1):
                     ####### CONSOLE OUT #########
                     matrix_update[x][y]+=eval("del"+str(iterations-4)+"_"+child)
                     matrix_update[y][x]+=eval("del"+str(iterations-4)+"_"+child)
-                    
+
                     ####### LATEX OUT #########
                     lmatrix_update[x][y]+=eval("ldel"+str(iterations-4)+"_"+child)
                     lmatrix_update[y][x]+=eval("ldel"+str(iterations-4)+"_"+child)
-                    
+
         # Finalize the update
         matrix=matrix_update.copy()
         lmatrix=lmatrix_update.copy()
-        
+
 # Look at these pretty matrices
 ppmat(matrix.copy(),seen)
 ppmat(lmatrix.copy(),seen)
@@ -187,7 +187,7 @@ for x,y,z,u,v in permutations(indices,5):
         counter+=1
         eq=get_alpha(matrix,seen,x,y,z,u,v,True).simplify()
         eql=get_alpha(lmatrix,seen,x,y,z,u,v,False).simplify()
-        
+
         # Creates Latex table row, FORMAT HERE
         latex_str+="("+labels[x]+","+labels[y]+":"+labels[z]+") - "+ labels[u]+","+labels[v]+ "& {$\\displaystyle " + latex(eql.simplify())+" $}\\\\[0.4cm]\\hline \n"
         pprint(eq)
@@ -199,6 +199,6 @@ latex_str+="\\end{longtable}\n"
 latex_str=latex_str.replace("scriptstyle0", "scriptscriptstyle 0")
 with open(argv[2],"w+") as tfile:
     tfile.write(preamble+latex_str+"\\end{document}")
-    
+
 # Show Latex pdf
 preview(latex_str,output="pdf",filename="alphas.pdf",preamble=preamble,euler=False)
