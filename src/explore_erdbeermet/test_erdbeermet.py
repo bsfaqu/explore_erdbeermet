@@ -248,11 +248,11 @@ while True:
                 sys.exit()
         while True:
             prnt_str=""
-            for i in range(0,len(curr_D)):
-                for j in range(0,len(curr_D)):
-                    prnt_str+=str(curr_D[i,j]) +"\t"
-                prnt_str+="\n"
-            print(prnt_str)
+            #for i in range(0,len(curr_D)):
+            #    for j in range(0,len(curr_D)):
+            #        prnt_str+=str(curr_D[i,j]) +"\t"
+            #    prnt_str+="\n"
+            #print(prnt_str)
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             dec_string=input("Do you wish to examine consens candidates, perform revR steps, examine a single candidate, or a group of candidates? cC/rR/sS/gG for choice.\n")
             if('c' in dec_string or 'C' in dec_string):
@@ -322,7 +322,6 @@ while True:
                     rnf_candidates(rec.rank_candidates_selective(D_copy,V,comp_cand))
 
             if('g' in dec_string or 'g' in dec_string):
-                print(agree_cand_alphas)
                 for i in range(0,len(agree_cand)):
                     print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
