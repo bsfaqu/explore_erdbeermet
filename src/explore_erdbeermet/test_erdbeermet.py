@@ -321,57 +321,98 @@ while True:
                     rnf_candidates(rec.rank_candidates_selective(D_copy,V,comp_cand))
                     
             if('g' in dec_string or 'g' in dec_string):
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                cand_string=input("Please enter candidates to check, comma separated.")
                 for i in range(0,len(agree_cand)):
                     print("["+str(i)+"] - " + str(agree_cand[i]))
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                cand_string=input("Please enter candidates to check, comma separated.")
                 comp_cand=[agree_cand[int(x.strip())] for x in cand_string.split(",")]
-                parents=[comp_cand[0][0],comp_cand[0][1]]
-                children=[x[2] for x in comp_cand]
-                alphas=[]
-                for x in range(0,len(comp_cand)):
-                    alphas+=[agree_cand_alphas[int(cand_string.split(",")[x].strip())]]
-                for x in range(0,len(children)):
-                    for j in range(0,len(curr_V)):
-                        if(j!=parents[0] and j!=parents[1] and j!=children[x]):
+                if len(comp_cand)==1:
+                    parents=[comp_cand[0][0],comp_cand[0][1]]
+                    child=comp_cand[0][2]
+                    us=[]
+                    for j in range(0,len(curr_D)):
+                        if(j!=parents[0] and j!=parents[1] and j!=child):
+                            us+=[j]
                             u=j
-                            break
-                    #print(curr_V)
-                    #print(curr_D)
-                    #print(alphas)
-                    #print(parents)
-                    #print(children)
-                    #print(u)
-                    deltas=rec._compute_deltas(curr_V,curr_D,alphas[x],parents[0],parents[1],children[x],u)
-                    curr_D2=curr_D.copy()
-                    curr_D2=rec._matrix_without_index(curr_D,curr_V.index(children[x]))
-                    curr_V2=[l for l in range(0,len(curr_D2))]
-                    rec._update_matrix(curr_V2  ,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
-                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                    print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(children[x]))
-                    for check_child in children:
-                        if check_child==children[x]:
-                            continue
+                            #break
+                    alpha=agree_cand_alphas[int(cand_string.strip())]
+                    for j in range(0,len(curr_V)):
+                        for u in us:
+                            if(j!=parents[0] and j!=parents[1] and j!=child):
+                                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                                print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(child) + "(WITNESS " + str(u)+" )" )
+                                deltas=rec._compute_deltas(curr_V,curr_D,alpha,parents[0],parents[1],child,u)
+                                curr_D2=curr_D.copy()
+                                curr_D2=rec._matrix_without_index(curr_D,curr_V.index(child))
+                                curr_V2=[l for l in range(0,len(curr_D2))]
+                                rec._update_matrix(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
+                                p0=parents[0]
+                                p1=parents[1]
+                                c=j
+                                if(parents[0]>child):
+                                    p0-=1
+                                if(parents[1]>child):
+                                    p1-=1
+                                if(j>child):
+                                    c-=1
+                                u_new=u
+                                if u_new>child:
+                                    u_new-=u-1
+                                    #u-=1
+                                #print("-------")
+                                #print(u_new)
+                                #print(u)
+                                #print(type(u_new))
+                                #print(type(u))
+                                print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(j) + "(WITNESS " + str(u) + " " + str(u_new) + " )" )
+                                print(str(rev_a_val(curr_D2,alpha,p0,p1,c,u_new,child)))
+                else:
+                    parents=[comp_cand[0][0],comp_cand[0][1]]
+                    children=[x[2] for x in comp_cand]
+                    alphas=[]
+                    for x in range(0,len(comp_cand)):
+                        alphas+=[agree_cand_alphas[int(cand_string.split(",")[x].strip())]]
+                    for x in range(0,len(children)):
                         for j in range(0,len(curr_V)):
-                            if(j!=parents[0] and j!=parents[1] and j!=children[x] and j!=check_child):
+                            if(j!=parents[0] and j!=parents[1] and j!=children[x]):
                                 u=j
                                 break
-                        # NEED TO FIT FOR REMOVED CHILD
-                        p0=parents[0]
-                        p1=parents[1]
-                        c=check_child
-                        if(parents[0]>children[x]):
-                            p0-=1
-                        if(parents[1]>children[x]):
-                            p1-=1
-                        if(check_child>children[x]):
-                            c-=1
-                        if u>children[x]:
-                            u-=1
-                        print("-------")
-                        print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(check_child))
-                        #print("rev_a_val(D,"+str(alphas[x])+","+str(parents[0])+","+str(parents[1])+","+str(check_child)+","+str(u)+","+str(children[x]))
-                        print(str(rev_a_val(curr_D2,alphas[x],p0,p1,c,u,children[x])))
+                        #print(curr_V)
+                        #print(curr_D)
+                        #print(alphas)
+                        #print(parents)
+                        #print(children)
+                        #print(u)
+                        deltas=rec._compute_deltas(curr_V,curr_D,alphas[x],parents[0],parents[1],children[x],u)
+                        curr_D2=curr_D.copy()
+                        curr_D2=rec._matrix_without_index(curr_D,curr_V.index(children[x]))
+                        curr_V2=[l for l in range(0,len(curr_D2))]
+                        rec._update_matrix(curr_V2  ,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
+                        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                        print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(children[x]))
+                        for check_child in children:
+                            if check_child==children[x]:
+                                continue
+                            for j in range(0,len(curr_V)):
+                                if(j!=parents[0] and j!=parents[1] and j!=children[x] and j!=check_child):
+                                    u=j
+                                    break
+                            # NEED TO FIT FOR REMOVED CHILD
+                            p0=parents[0]
+                            p1=parents[1]
+                            c=check_child
+                            if(parents[0]>children[x]):
+                                p0-=1
+                            if(parents[1]>children[x]):
+                                p1-=1
+                            if(check_child>children[x]):
+                                c-=1
+                            if u>children[x]:
+                                u-=1
+                            print("-------")
+                            print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(check_child))
+                            #print("rev_a_val(D,"+str(alphas[x])+","+str(parents[0])+","+str(parents[1])+","+str(check_child)+","+str(u)+","+str(children[x]))
+                            print(str(rev_a_val(curr_D2,alphas[x],p0,p1,c,u,children[x])))
             elif("r" in dec_string or "R" in dec_string):
                 for i in range(0,len(agree_cand)):
                     print("["+str(i)+"] - " + str(agree_cand[i]))
