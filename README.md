@@ -20,7 +20,9 @@ pip install texttable
 pip install itertools
 ```
 
-should do the trick. Furthermore, you should install the "canonical" erdbeermet first, and replace its installation in site_packages by the erdbeermet version included in this repository.e
+should do the trick. Furthermore, you should install the "canonical" erdbeermet first, and replace its installation in site_packages by the erdbeermet version included in this repository.
+
+Additionally, you need to change Line 167 in src/explore_erdbeermet/rmet.py to point to your own splitstree installation if you desire to explore Scenarios visualized as SplitsTree. Just remove Line 167/168 if you do not want to currently use this function.
 
 
 ## rmet.py
