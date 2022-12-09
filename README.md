@@ -20,7 +20,7 @@ pip install texttable
 pip install itertools
 ```
 
-should do the trick.
+should do the trick. Furthermore, you should install the "canonical" erdbeermet first, and replace its installation in site_packages by the erdbeermet version included in this repository.e
 
 
 ## rmet.py
