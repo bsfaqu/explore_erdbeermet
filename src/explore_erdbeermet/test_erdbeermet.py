@@ -7,6 +7,7 @@ import math
 import subprocess
 from sys import argv
 import sys
+from itertools import permutations
 
 def rev_a_val(D,a,x,y,z,u,v):
     return((-a*D[x,z]+a*D[z,y]+a*D[x,y]+D[u,z]-D[z,y]-D[u,y])/(2*a*D[x,y]+D[u,x]-D[u,y]-D[x,y]))
@@ -321,7 +322,8 @@ while True:
                             next_N=next_N+1
                     rnf_candidates(rec.rank_candidates_selective(D_copy,V,comp_cand))
 
-            if('g' in dec_string or 'g' in dec_string):
+            if('g' in dec_string or 'G' in dec_string):
+                all_alphas = rec.rank_candidates(curr_D,curr_V)
                 for i in range(0,len(agree_cand)):
                     print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -337,36 +339,79 @@ while True:
                             u=j
                             #break
                     alpha=agree_cand_alphas[int(cand_string.strip())]
+                    # print(us)
+                    # print("^!")
+                    u_perms = list(permutations(us,2))
+                    # print(u_perms)
                     for j in range(0,len(curr_V)):
-                        for u in us:
-                            if(j!=parents[0] and j!=parents[1] and j!=child):
-                                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                                print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(child) + "(WITNESS " + str(u)+" )" )
-                                deltas=rec._compute_deltas(curr_V,curr_D,alpha,parents[0],parents[1],child,u)
-                                curr_D2=curr_D.copy()
-                                curr_D2=rec._matrix_without_index(curr_D,curr_V.index(child))
-                                curr_V2=[l for l in range(0,len(curr_D2))]
-                                rec._update_matrix(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
-                                p0=parents[0]
-                                p1=parents[1]
-                                c=j
-                                if(parents[0]>child):
-                                    p0-=1
-                                if(parents[1]>child):
-                                    p1-=1
-                                if(j>child):
-                                    c-=1
-                                u_new=u
-                                if u_new>child:
-                                    u_new-=u-1
-                                    #u-=1
-                                #print("-------")
-                                #print(u_new)
-                                #print(u)
-                                #print(type(u_new))
-                                #print(type(u))
-                                print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(j) + "(WITNESS " + str(u) + " " + str(u_new) + " )" )
-                                print(str(rev_a_val(curr_D2,alpha,p0,p1,c,u_new,child)))
+                        if(j!=parents[0] and j!=parents[1] and j!=child):
+                            # print(j)
+                            # print("J")
+
+                            deltas=rec._compute_deltas(curr_V,curr_D,alpha,parents[0],parents[1],child,j)
+
+                            # Delete child from matrix
+                            curr_D2=curr_D.copy()
+                            curr_D2=rec._matrix_without_index(curr_D,curr_V.index(child))
+                            curr_V2=[l for l in range(0,len(curr_D2))]
+                            rec._update_matrix(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
+
+                            print("---------------------")
+                            print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(child))
+
+                            # Check alphas for all legit witness combinations
+                            # TODO: CHANGE THE COMBINATIONS BACK TO U; WERE ONLY DEPENDANT ON U.
+                            for comb in u_perms:
+                                # print(comb)
+                                if( parents[0] not in comb and parents[1] not in comb and child not in comb and j not in comb):
+                                    w_0 = comb[0]
+                                    w_1 = comb[1]
+                                    p_0 = parents[0]
+                                    p_1 = parents[1]
+                                    mock_child = j
+
+                                    if p_0 > child: p_0-=1
+                                    if p_1 > child: p_1-=1
+                                    if w_0 > child: w_0-=1
+                                    if w_1 > child: w_1-=1
+                                    if mock_child > child: mock_child-=1
+
+                                    #print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(mock_child) + "(WITNESS " + str(w_0) + " " + str(w_1) + " )" )
+                                    print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(j) + " ( WITNESS " + str(comb[0]) + " " + str(comb[1]) + " )" )
+                                    check_alpha = rev_a_val(curr_D2,alpha,p_0,p_1,mock_child,w_0,w_1)
+                                    chk_1=min(comb[0],child)
+                                    chk_2=max(comb[0],child)
+                                    print(str(check_alpha) + " <-> " + str(all_alphas[ (parents[0],parents[1],j) ][(chk_1,chk_2)]))
+
+                        # for u in us:
+                        #     if(j!=parents[0] and j!=parents[1] and j!=child and j!=u):
+                        #         print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                        #         print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(child) + "(WITNESS " + str(u)+" )" )
+                        #         deltas=rec._compute_deltas(curr_V,curr_D,alpha,parents[0],parents[1],child,u)
+                        #         curr_D2=curr_D.copy()
+                        #         curr_D2=rec._matrix_without_index(curr_D,curr_V.index(child))
+                        #         curr_V2=[l for l in range(0,len(curr_D2))]
+                        #         rec._update_matrix(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
+                        #         p0=parents[0]
+                        #         p1=parents[1]
+                        #         c=j
+                        #         if(parents[0]>child):
+                        #             p0-=1
+                        #         if(parents[1]>child):
+                        #             p1-=1
+                        #         if(j>child):
+                        #             c-=1
+                        #         u_new=u
+                        #         if u_new>child:
+                        #             u_new-=u-1
+                        #             #u-=1
+                        #         #print("-------")
+                        #         #print(u_new)
+                        #         #print(u)
+                        #         #print(type(u_new))
+                        #         #print(type(u))
+                        #         print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(j) + "(WITNESS " + str(u_new) + " " + str(c) + " )" )
+                        #         print(str(rev_a_val(curr_D2,alpha,p0,p1,c,u_new,child)))
                 else:
                     parents=[comp_cand[0][0],comp_cand[0][1]]
                     children=[x[2] for x in comp_cand]
@@ -437,63 +482,63 @@ while True:
                 if(len(curr_D)==4):
                     print("Valid 4? - " + str(rec.recognize4_matrix_only(curr_D)))
                 curr_N=curr_N-1
-                if(curr_N==3 or True):
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 234")
-                    #print(str( (-0.546*curr_D[0,2]+0.546*curr_D[2,3]+curr_D[0,1]-curr_D[1,3]-0.454*curr_D[0,3])/(0.546*curr_D[2,3]+curr_D[1,2]-curr_D[1,3]-0.454*curr_D[2,3]) ))
-                    #print(str( ((-0.546*curr_D[0,2])+(0.546*curr_D[0,3])+(0.546*curr_D[2,3])+curr_D[0,1]-curr_D[0,3]-curr_D[1,3])/(2*0.546*curr_D[2,3]+curr_D[1,2]-curr_D[1,3]-curr_D[2,3]) ))
-                    #def rev_a_val(D,a,x,y,z,u,v):
-                    print(rev_a_val(curr_D,0.546,2,3,1,0,4))
-                   # print(str((-0.546*11.786738069999998+0.546*22.233512520000005+0.454*18.272028071093594+23.027000000000008-7.2362874800000085-22.233512520000005)/(2*0.546*18.272028071093594+17.506921930000004-7.2362874800000085-8.272028071093594)))
-                    #print(str( (-0.546*curr_D[1,2]+0.546*curr_D[1,3]+0.546*curr_D[2,3]+curr_D[0,1]-curr_D[1,3]-curr_D[0,3])/(2*0.546*curr_D[2,3]+curr_D[0,2]-curr_D[0,3]-curr_D[2,3]) ))
-                    print(rev_a_val(curr_D,0.546,2,3,0,1,4))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!r!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 231")
-                    print(rev_a_val(curr_D,0.7729,1,2,3,0,1))
-                    print(rev_a_val(curr_D,0.7729,1,2,0,3,1))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 230")
-                    print(rev_a_val(curr_D,0.2366,1,2,0,3,0))
-                    print(rev_a_val(curr_D,0.2366,1,2,3,0,0))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 012")
-                    print(rev_a_val(curr_D,0.1357,0,1,2,3,2))
-                    print(rev_a_val(curr_D,0.1357,0,1,3,2,2))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 013")
-                    print(rev_a_val(curr_D,0.1638,0,1,2,3,3))
-                    print(rev_a_val(curr_D,0.1638,0,1,3,2,3))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 014")
-                    print(rev_a_val(curr_D,0.9300,0,1,2,3,4))
-                    print(rev_a_val(curr_D,0.9300,0,1,3,2,4))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    #print("Alphas 345")
-                    #print(rev_a_val(curr_D,0.974,3,4,1,2,5))
-                    #print(rev_a_val(curr_D,0.974,3,4,1,2,5))
-                    print("Alphas 021")
-                    print(rev_a_val(curr_D,0.4117647,0,1,2,3,1))
-                    print(rev_a_val(curr_D,0.4117647,0,1,3,2,1))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 023")
-                    print(rev_a_val(curr_D,0.5,0,2,1,3,3))
-                    print(rev_a_val(curr_D,0.5,0,2,3,1,3))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 024")
-                    print(rev_a_val(curr_D,0.243,0,2,1,3,4))
-                    print(rev_a_val(curr_D,0.243,0,2,3,1,4))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 234")
-                    print(rev_a_val(curr_D,0.546,2,3,1,0,4))
-                    print(rev_a_val(curr_D,0.546,2,3,0,1,4))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!r!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 231")
-                    print(rev_a_val(curr_D,0.5841,1,2,3,0,1))
-                    print(rev_a_val(curr_D,0.5841,1,2,0,3,1))
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("Alphas 230")
-                    print(rev_a_val(curr_D,0.4885,1,2,0,3,0))
-                    print(rev_a_val(curr_D,0.4885,1,2,3,0,0))
+                # if(curr_N==3 or True):
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 234")
+                #     #print(str( (-0.546*curr_D[0,2]+0.546*curr_D[2,3]+curr_D[0,1]-curr_D[1,3]-0.454*curr_D[0,3])/(0.546*curr_D[2,3]+curr_D[1,2]-curr_D[1,3]-0.454*curr_D[2,3]) ))
+                #     #print(str( ((-0.546*curr_D[0,2])+(0.546*curr_D[0,3])+(0.546*curr_D[2,3])+curr_D[0,1]-curr_D[0,3]-curr_D[1,3])/(2*0.546*curr_D[2,3]+curr_D[1,2]-curr_D[1,3]-curr_D[2,3]) ))
+                #     #def rev_a_val(D,a,x,y,z,u,v):
+                #     print(rev_a_val(curr_D,0.546,2,3,1,0,4))
+                #    # print(str((-0.546*11.786738069999998+0.546*22.233512520000005+0.454*18.272028071093594+23.027000000000008-7.2362874800000085-22.233512520000005)/(2*0.546*18.272028071093594+17.506921930000004-7.2362874800000085-8.272028071093594)))
+                #     #print(str( (-0.546*curr_D[1,2]+0.546*curr_D[1,3]+0.546*curr_D[2,3]+curr_D[0,1]-curr_D[1,3]-curr_D[0,3])/(2*0.546*curr_D[2,3]+curr_D[0,2]-curr_D[0,3]-curr_D[2,3]) ))
+                #     print(rev_a_val(curr_D,0.546,2,3,0,1,4))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!r!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 231")
+                #     print(rev_a_val(curr_D,0.7729,1,2,3,0,1))
+                #     print(rev_a_val(curr_D,0.7729,1,2,0,3,1))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 230")
+                #     print(rev_a_val(curr_D,0.2366,1,2,0,3,0))
+                #     print(rev_a_val(curr_D,0.2366,1,2,3,0,0))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 012")
+                #     print(rev_a_val(curr_D,0.1357,0,1,2,3,2))
+                #     print(rev_a_val(curr_D,0.1357,0,1,3,2,2))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 013")
+                #     print(rev_a_val(curr_D,0.1638,0,1,2,3,3))
+                #     print(rev_a_val(curr_D,0.1638,0,1,3,2,3))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 014")
+                #     print(rev_a_val(curr_D,0.9300,0,1,2,3,4))
+                #     print(rev_a_val(curr_D,0.9300,0,1,3,2,4))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     #print("Alphas 345")
+                #     #print(rev_a_val(curr_D,0.974,3,4,1,2,5))
+                #     #print(rev_a_val(curr_D,0.974,3,4,1,2,5))
+                #     print("Alphas 021")
+                #     print(rev_a_val(curr_D,0.4117647,0,1,2,3,1))
+                #     print(rev_a_val(curr_D,0.4117647,0,1,3,2,1))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 023")
+                #     print(rev_a_val(curr_D,0.5,0,2,1,3,3))
+                #     print(rev_a_val(curr_D,0.5,0,2,3,1,3))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 024")
+                #     print(rev_a_val(curr_D,0.243,0,2,1,3,4))
+                #     print(rev_a_val(curr_D,0.243,0,2,3,1,4))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 234")
+                #     print(rev_a_val(curr_D,0.546,2,3,1,0,4))
+                #     print(rev_a_val(curr_D,0.546,2,3,0,1,4))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!r!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 231")
+                #     print(rev_a_val(curr_D,0.5841,1,2,3,0,1))
+                #     print(rev_a_val(curr_D,0.5841,1,2,0,3,1))
+                #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                #     print("Alphas 230")
+                #     print(rev_a_val(curr_D,0.4885,1,2,0,3,0))
+                #     print(rev_a_val(curr_D,0.4885,1,2,3,0,0))
                     #print(str(  (-0.772919*curr_D[0,2]+0.772919*curr_D[0,3]+0.772919*curr_D[2,3]+curr_D[0,4]-curr_D[0,3]-curr_D[3,4])/(2*0.772919*curr_D[2,3]+curr_D[2,4]-curr_D[3,4]-curr_D[2,3] ))
                     #print(str(  (-0.772919*curr_D[0,1]+0.772919*curr_D[0,2]+0.772919*curr_D[1,2]+curr_D[0,3]-curr_D[0,2]-curr_D[2,3])/(2*0.772919*curr_D[1,2]+curr_D[1,3]-curr_D[2,3]-curr_D[1,2] )))
                     #print(str( print(str( ((-0.772919*curr_D[2,4])+(0.772919*curr_D[3,4])+(0.772919*curr_D[2,3])+curr_D[0,4]-curr_D[3,4]-curr_D[0,3])/(2*0.772919*curr_D[2,3]+curr_D[0,2]-curr_D[0,3]-curr_D[2,3]) ))  ))
