@@ -8,6 +8,9 @@ import subprocess
 from sys import argv
 import sys
 from itertools import permutations
+import random
+from solve import check_candidate
+
 
 def rev_a_val(D,a,x,y,z,u,v):
     return((-a*D[x,z]+a*D[z,y]+a*D[x,y]+D[u,z]-D[z,y]-D[u,y])/(2*a*D[x,y]+D[u,x]-D[u,y]-D[x,y]))
@@ -17,6 +20,7 @@ def init_scenario(filepath):
     V=[i for i in range(0,len(scenario.D))]
     # rank_candidates finds alpha values for every possible rev tuple
     candidates=rec.rank_candidates(scenario.D,V)
+    fail_wp3 = False
     with open('output/logging.txt', 'w') as f:
         with redirect_stdout(f):
             print("============================================== ALL")
@@ -25,7 +29,11 @@ def init_scenario(filepath):
             print("============================================== WP3")
             tree3 = rec.recognize(D=scenario.D, B=[0,1,2,3], first_candidate_only=True, small_spike=False, print_info=True)
             fail_wp3 = True if tree3.root.valid_ways == 0 else False
+    # if not fail_wp3:
+    #     print("VALID SCENARIO")
+    #     sys.exit()
     tree.visualize(save_as='output/vis_all.pdf')
+
     return candidates
 
 def get_matrix(filepath):
@@ -75,10 +83,10 @@ def rnf_candidates(candidates):
             if(math.isnan(sorted_c[i][1])):
                 nan_counter+=1
             elif(math.inf==sorted_c[i][1]):
-                agree=False
+                #agree=False
                 inf_counter+=1
             elif(-math.inf==sorted_c[i][1]):
-                agree=False
+                #agree=False
                 neg_inf_counter+=1
             else:
                 clean_sorted_c+=[sorted_c[i]]
@@ -229,6 +237,10 @@ while True:
         V_copy=[x for x in range(0,curr_N)]
         #V_copy=V.copy()
         #V_copy.remove(r_cand[2])
+        print("WITNESS " + str(u))
+        print(deltas)
+        print(scen.D)
+        input()
         D_copy=scen.D.copy()
         D_copy=rec._matrix_without_index(D_copy,V.index(r_cand[2]))
         print(len(D_copy))
@@ -248,12 +260,13 @@ while True:
                 print(str( (-0.546*curr_D[1,2]+0.546*curr_D[1,3]+0.546*curr_D[2,3]+curr_D[0,1]-curr_D[1,3]-curr_D[0,3])/(2*0.546*curr_D[2,3]+curr_D[0,2]-curr_D[0,3]-curr_D[2,3]) ))
                 sys.exit()
         while True:
-            prnt_str=""
-            #for i in range(0,len(curr_D)):
+            # prnt_str=""
+            # for i in range(0,len(curr_D)):
             #    for j in range(0,len(curr_D)):
             #        prnt_str+=str(curr_D[i,j]) +"\t"
             #    prnt_str+="\n"
-            #print(prnt_str)
+            # print(prnt_str)
+            print(curr_D)
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             dec_string=input("Do you wish to examine consens candidates, perform revR steps, examine a single candidate, or a group of candidates? cC/rR/sS/gG for choice.\n")
             if('c' in dec_string or 'C' in dec_string):
@@ -341,47 +354,72 @@ while True:
                     alpha=agree_cand_alphas[int(cand_string.strip())]
                     # print(us)
                     # print("^!")
-                    u_perms = list(permutations(us,2))
+                    # u_perms = list(permutations(us,2))
                     # print(u_perms)
+
+                    deltas=rec._compute_deltas(curr_V,curr_D,alpha,parents[0],parents[1],child,us[0])
+                    if (deltas[1] < 0 and not np.isclose(deltas[1],0.0) ) or (deltas[2] < 0 and not np.isclose(deltas[2],0.0) ) or (deltas[3] < 0 and not np.isclose(deltas[3],0.0) ) :
+                        print("---------------------")
+                        print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(child))
+                        print("DELTAS SMALLER ZERO")
+                        print(deltas)
+
+                    # Delete child from matrix
+                    curr_D2=curr_D.copy()
+                    curr_V2=curr_V.copy()
+                    print("-----------" + str(check_candidate(curr_D.copy(),parents[0],parents[1],child,alpha,all_alphas,print_info=True)) + "-----------")
+                    # continue
+                    curr_D2=rec._update_matrix(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
+                    curr_D2=rec._matrix_without_index(curr_D,curr_V.index(child))
+                    curr_V2=[l for l in range(0,len(curr_D2))]
+
                     for j in range(0,len(curr_V)):
                         if(j!=parents[0] and j!=parents[1] and j!=child):
                             # print(j)
                             # print("J")
 
-                            deltas=rec._compute_deltas(curr_V,curr_D,alpha,parents[0],parents[1],child,j)
-
-                            # Delete child from matrix
-                            curr_D2=curr_D.copy()
-                            curr_D2=rec._matrix_without_index(curr_D,curr_V.index(child))
-                            curr_V2=[l for l in range(0,len(curr_D2))]
-                            rec._update_matrix(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
+                            # deltas=rec._compute_deltas(curr_V,curr_D,alpha,parents[0],parents[1],child,j)
+                            # if (deltas[1] < 0 and not np.isclose(deltas[1],0.0) ) or (deltas[2] < 0 and not np.isclose(deltas[2],0.0) ) or (deltas[3] < 0 and not np.isclose(deltas[3],0.0) ) :
+                            #     print("---------------------")
+                            #     print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(child))
+                            #     print("DELTAS SMALLER ZERO")
+                            #     print(deltas)
+                            # # Delete child from matrix
+                            # curr_D2=curr_D.copy()
+                            # curr_V2=curr_V.copy()
+                            # rec._update_matrix(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
+                            # curr_D2=rec._matrix_without_index(curr_D,curr_V.index(child))
+                            # curr_V2=[l for l in range(0,len(curr_D2))]
 
                             print("---------------------")
                             print("ALPHAS - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(child))
 
                             # Check alphas for all legit witness combinations
                             # TODO: CHANGE THE COMBINATIONS BACK TO U; WERE ONLY DEPENDANT ON U.
-                            for comb in u_perms:
+                            for u in us:
                                 # print(comb)
-                                if( parents[0] not in comb and parents[1] not in comb and child not in comb and j not in comb):
-                                    w_0 = comb[0]
-                                    w_1 = comb[1]
+                                # if( parents[0] not in comb and parents[1] not in comb and child not in comb and j not in comb):
+                                if u != parents[0] and u!= parents[1] and u!=child and u!=j:
+                                    # w_0 = comb[0]
+                                    # w_1 = comb[1]
+                                    w_0 = u
                                     p_0 = parents[0]
                                     p_1 = parents[1]
                                     mock_child = j
 
                                     if p_0 > child: p_0-=1
                                     if p_1 > child: p_1-=1
-                                    if w_0 > child: w_0-=1
-                                    if w_1 > child: w_1-=1
+                                    # if w_0 > child: w_0-=1
+                                    # if w_1 > child: w_1-=1
+                                    if u > child: w_0-=1
                                     if mock_child > child: mock_child-=1
 
                                     #print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(mock_child) + "(WITNESS " + str(w_0) + " " + str(w_1) + " )" )
-                                    print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(j) + " ( WITNESS " + str(comb[0]) + " " + str(comb[1]) + " )" )
-                                    check_alpha = rev_a_val(curr_D2,alpha,p_0,p_1,mock_child,w_0,w_1)
-                                    chk_1=min(comb[0],child)
-                                    chk_2=max(comb[0],child)
-                                    print(str(check_alpha) + " <-> " + str(all_alphas[ (parents[0],parents[1],j) ][(chk_1,chk_2)]))
+                                    print("CHECKING - " + str(parents[0]) + ", " + str(parents[1]) + ":" + str(j) + " ( WITNESS " + str(u) + " )" )
+                                    check_alpha = rev_a_val(curr_D2,alpha,p_0,p_1,mock_child,w_0,w_0)
+                                    chk_1=min(u,child)
+                                    chk_2=max(u,child)
+                                    print(str(check_alpha) + " <-> " + str(all_alphas[ (parents[0],parents[1],j) ][(chk_1,chk_2)]) + " - " + str(np.isclose(all_alphas[ (parents[0],parents[1],j) ][(chk_1,chk_2)],check_alpha)))
 
                         # for u in us:
                         #     if(j!=parents[0] and j!=parents[1] and j!=child and j!=u):
