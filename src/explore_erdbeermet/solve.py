@@ -418,14 +418,89 @@ def check_candidate(distance,x,y,z,alpha,alphas,print_info=False,competing_pairs
     for c in range(0,n):
         if(c not in [x,y,z]):
             mock_children += [c]
-
+    mock_children = mock_children[0:-1]
     # print(mock_children[0])
     # print("^")
+
+    for c in mock_children:
+        deltas = rec._compute_deltas(nodes, distance, alpha, x, y, z, c)
+        print("------")
+        print("WITNESS " + str(c))
+        print("DELTA_X: " + str(deltas[2]))
+        print("DELTA_Y: " + str(deltas[3]))
+        print("DELTA_Z: " + str(deltas[0]))
+
+    # test_copy = distance.copy()
+    # u = mock_children[0]
+    # print("ALPHA BEFORE DISTURBANCE: " + str(alpha))
+    # test_copy[x,z] = test_copy[x,z] + 100.1235
+    # test_copy[y,z] = test_copy[y,z] + 25.35612
+    # test_copy[x,y] = test_copy[x,y] + 5.9876
+    # test_copy[z,x] = test_copy[z,x] + 100.1235
+    # test_copy[z,y] = test_copy[z,y] + 25.35612
+    # test_copy[y,x] = test_copy[y,x] + 5.9876
+    # test_copy[x,u] = test_copy[x,u] + 10.0
+    # test_copy[y,u] = test_copy[y,u] + 25.0
+    # test_copy[z,u] = test_copy[z,u] + 12.0
+    # test_copy[u,x] = test_copy[u,x] + 10.0
+    # test_copy[u,y] = test_copy[u,y] + 25.0
+    # test_copy[u,z] = test_copy[u,z] + 12.0
+
+    # print(distance)
+    # print("-------------------------------------------------------")
+    # print(test_copy)
+    # print(mock_children[0])
+    # print(mock_children[1])
+    # print("!")
+
+
+
+
+    # test_alpha = rec._compute_alpha(nodes,test_copy, x, y, z, mock_children[0], mock_children[1],print_info=True)
+    # print("ALPHA AFTER DISTURBANCE: " + str(test_alpha))
+    # print(np.isclose(alpha,test_alpha))
 
     deltas = rec._compute_deltas(nodes,distance,alpha,x,y,z,mock_children[0])
     if (deltas[1] < 0 and not np.isclose(deltas[1],0.0) ) or (deltas[2] < 0 and not np.isclose(deltas[2],0.0) ) or (deltas[3] < 0 and not np.isclose(deltas[3],0.0) ) :
         # print(deltas)
         return False
+
+    if(print_info):
+        print("CHECKING " + str(x) + "," + str(y) + " : " + str(z))
+        print(alpha)
+        print((alpha-1)/alpha)
+        print(alpha/(alpha-1))
+        print("REAL VALUES:")
+    try:
+        alpha_chk1 = (alpha-1)/alpha
+        alpha_chk2 = alpha/(alpha-1)
+        mock_children_combinations = permutations(mock_children,2)
+        for t in mock_children_combinations:
+            # Some fiddling, the alpha dict keys are sorted ascendingly within each
+            # tuple.
+            c1 = min(t[0], t[1])
+            c2 = max(t[0], t[1])
+            l = min(x,z)
+            r = max(x,z)
+            if(print_info):
+                print((l,r,y))
+                print((c1,c2))
+                print(alphas[ (l,r,y) ][ (c1,c2) ])
+            a_chk1 = alphas[ (l,r,y) ][ (c1,c2) ]
+            l = min(y,z)
+            r = max(y,z)
+            if(print_info):
+                print(alphas[ (l,r,x) ][ (c1,c2) ])
+            a_chk2 = alphas[ (l,r,x) ][ (c1,c2) ]
+
+            if (np.isclose(alpha_chk1,a_chk1) or np.isclose(alpha_chk1,a_chk2)) and (np.isclose(alpha_chk2,a_chk1) or np.isclose(alpha_chk2,a_chk2)):
+                continue
+            else:
+                return False
+    except:
+        print("ALPHA CHECK DIDNT WORK ZERO DIVISION")
+
+
 
     distance = rec._update_matrix_return(nodes,distance,x,y,deltas[2],deltas[3])
     distance = rec._matrix_without_index(distance,nodes.index(z))
@@ -433,18 +508,10 @@ def check_candidate(distance,x,y,z,alpha,alphas,print_info=False,competing_pairs
     # print("JUST BEFORE CHECK TRIANGLE")
     # print(len(competing_pairs))
     # print(len(distance))
-    if len(competing_pairs) != 0 and len(distance) > 4:
-        # print("TRY CHECK TRIANGLE")
-        check = check_triangle(distance,x,y,z,competing_pairs,print_info=print_info)
-        if check:
-            pass
-        else:
-            # print("TRIANGLE HURT")
-            return False
 
     nodes = nodes[0:-1]
     # CHECK WHY WE REMOVE THIS MOCK CHILD
-    mock_children = mock_children[0:-1]
+    # mock_children = mock_children[0:-1]
 
     witnesses = []
 
@@ -472,20 +539,29 @@ def check_candidate(distance,x,y,z,alpha,alphas,print_info=False,competing_pairs
                 w_0_adjusted = w_0
                 if w_0_adjusted > z:
                     w_0_adjusted -= 1
-
                 check_alpha = rev_a_val(distance,alpha,p_0,p_1,mock_child_adjusted,w_0_adjusted)
 
                 chk_1=min(w_0,z)
                 chk_2=max(w_0,z)
 
                 # numerically print all the compare values
-                # if print_info:
-                #     print(str(check_alpha) + " <-> " + str(alphas[ (x,y,mock_child) ][(chk_1,chk_2)]))
+                if print_info:
+                    print("CHECKING " + str(p_0) + "," + str(p_1) + ":" + str(mock_child) + " WITN: " + str(w_0))
+                    print(str(check_alpha) + " <-> " + str(alphas[ (x,y,mock_child) ][(chk_1,chk_2)]))
 
                 if np.isclose(alphas[ (x,y,mock_child) ][(chk_1,chk_2)],check_alpha):
                     continue
                 else:
+                    print("PROPER CAND CHECK FALSE------------------------------------------------>")
                     return False
+    if len(competing_pairs) != 0 and len(distance) > 4:
+        # print("TRY CHECK TRIANGLE")
+        check = check_triangle(distance,x,y,z,competing_pairs,print_info=print_info)
+        if check:
+            pass
+        else:
+            # print("TRIANGLE HURT")
+            return False
     return True
 
 def check_spikes(distance,x,y,z):

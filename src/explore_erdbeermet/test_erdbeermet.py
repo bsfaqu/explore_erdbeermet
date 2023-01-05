@@ -369,7 +369,10 @@ while True:
                     curr_V2=curr_V.copy()
                     print("-----------" + str(check_candidate(curr_D.copy(),parents[0],parents[1],child,alpha,all_alphas,print_info=True)) + "-----------")
                     # continue
-                    curr_D2=rec._update_matrix(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
+
+                    curr_D2=curr_D.copy()
+                    curr_V2=curr_V.copy()
+                    curr_D2=rec._update_matrix_return(curr_V2,curr_D2,parents[0],parents[1],deltas[2],deltas[3])
                     curr_D2=rec._matrix_without_index(curr_D,curr_V.index(child))
                     curr_V2=[l for l in range(0,len(curr_D2))]
 
@@ -654,7 +657,7 @@ while True:
                 print("SPIKE - " + "("+str(parent[0])+", "+str(parent[0])+": "+str(next_N)+")")
                 print("SPIKE - " + "("+str(parent[1])+", "+str(parent[1])+": "+str(next_N)+")")
                 #print("SPIKE - " + "("+str(parent[2])+", "+str(parent[2])+": "+str(next_N)+")")
-                D_copy2=rec.add_child(D_copy.copy(),parent[1],parent[1],next_N,0.5,dt)
+                D_copy2=rec.add_child(D_copy.copy(),parent[0],parent[0],next_N,0.5,dt)
                 V+=[len(V)]
                 dt+=[0.0]
                 D_copy2=rec.add_child(D_copy2.copy(),parent[1],parent[1],next_N+1,0.5,dt)

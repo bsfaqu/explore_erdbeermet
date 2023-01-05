@@ -34,6 +34,46 @@ def get_alpha(matrix,seen,x,y,z,u,v,print_info):
         print()
     return( ( (matrix[u][z]+matrix[v][y])-( matrix[v][z]+matrix[u][y] ) )/( (matrix[u][x]+matrix[v][y] )-(matrix[v][x]+matrix[u][y]) ) )
 
+# def _compute_delta_x(alpha, xz, d_xy, delta_z):
+#     # print("--")
+#     # print(alpha)
+#     # print(xz)
+#     # print(d_xy)
+#     # print(delta_z)
+#     # print("--")
+#     return xz - (1-alpha) * d_xy - delta_z
+
+def _compute_d_xy(alpha, xz, yz, ux, uy, uz, delta_z):
+    return (   (uz - alpha * ux - (1-alpha) * uy
+                - 2 * delta_z + alpha * xz + (1-alpha) * yz)
+            / (2 * alpha * (1-alpha))   )
+
+# TODO: INCLUDE DXY CALCULATIONS!!!
+def get_delta_x(matrix, x, y, z, alpha, delta_z):
+    d_xy = _compute_d_xy(alpha, matrix[x][z], matrix[y][z], matrix[u][x], matrix[u][y], matrix[u][z], delta_z)
+    return( matrix[x][z].simplify() - (1-alpha) * d_xy.simplify() - delta_z )
+
+def get_delta_y(matrix, x, y, z, alpha, delta_z):
+    d_xy = _compute_d_xy(alpha, matrix[x][z], matrix[y][z], matrix[u][x], matrix[u][y], matrix[u][z], delta_z)
+    return( matrix[y][z].simplify() - (alpha * d_xy.simplify()) - delta_z )
+
+def get_delta_z(matrix, x, y, z):
+    return( 0.5 * (matrix[x][z].simplify() + matrix[y][z].simplify() - matrix[x][y].simplify()) )
+
+# def _compute_delta_y(alpha, yz, d_xy, delta_z):
+#     # print("--")
+#     # print(alpha)
+#     # print(yz)
+#     # print(d_xy)
+#     # print(delta_z)
+#     # print("--")
+#     return yz - alpha * d_xy - delta_z
+
+
+# def _compute_delta_z(xy, xz, yz):
+#
+#     return 0.5 * (xz + yz - xy)
+
 # read scenario from argv1
 with open(argv[1],"r") as f:
     lines=f.read().split("\n")
@@ -54,6 +94,8 @@ matrix_update=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes
 # lmatrix stores latex code for pdf output
 lmatrix=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes))]
 lmatrix_update=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes))]
+
+lmatrix1=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes))]
 
 # preprocess nodes well encounter
 for i in range(0,len(in_nodes)):
@@ -178,8 +220,37 @@ counter=0
 
 # LaTeX preamble and table init
 preamble="\\documentclass[12pt]{article}\n\\usepackage[a3paper]{geometry}\n\\usepackage{amsmath,amsfonts}\n\\usepackage{longtable}\n\\usepackage{enumerate}\n\\begin{document}\n"
-latex_str="\\renewcommand*{\\arraystretch}{2.3}\n\\begin{longtable}{l|c}\\hline\n"
+latex_str="\\renewcommand*{\\arraystretch}{2.3}\n\\begin{longtable}{l|l}\\hline\n"
 init_printing()
+
+
+for x,y,z,u in permutations(indices,4):
+    if y>x:
+        if (x== 0 and y==2 and z ==3):
+            alpha = get_alpha(lmatrix,seen,x,y,z,1,4,True).simplify()
+        elif x == 0 and y == 2 and z == 4:
+            alpha = get_alpha(lmatrix,seen,x,y,z,0,2,True).simplify()
+        else:
+            alpha = symbols("\\alpha_{" +str(x)+";"+str(y)+";"+str(z) + "}")
+        # deltaz
+        delta_z = get_delta_z(lmatrix, x, y, z).simplify().evalf()
+        #deltax
+        delta_x = get_delta_x(lmatrix, x, y, z, alpha, delta_z).simplify().evalf()
+        #deltay
+        delta_y = get_delta_y(lmatrix, x, y, z, alpha, delta_z).simplify().evalf()
+
+        latex_str += "$\delta^{"+ str(labels[x]) + "}_{" +str(labels[x])+","+str(labels[y])+","+str(labels[z]) + ";" + str(labels[u]) + "}$ "
+        latex_str += "& {$\\displaystyle " + latex(delta_x.simplify()) +" $}\\\\[0.4cm]\\hline \n"
+
+        latex_str += "$\delta^{"+ str(labels[y]) + "}_{" +str(labels[x])+","+str(labels[y])+","+str(labels[z]) + ";" + str(labels[u]) + "}$ "
+        latex_str += "& {$\\displaystyle " + latex(delta_y.simplify()) +" $}\\\\[0.4cm]\\hline \n"
+
+        latex_str += "$\delta^{"+ str(labels[z]) + "}_{" +str(labels[x])+","+str(labels[y])+","+str(labels[z]) + ";" + str(labels[u]) + "}$ "
+        latex_str += "& {$\\displaystyle " + latex(delta_z.simplify()) +" $}\\\\[0.4cm]\\hline \n"
+
+        sum = delta_x+delta_y+delta_z
+        sum.simplify().evalf()
+        latex_str += "SUM & {$\\displaystyle " + latex(sum.simplify()) +" $}\\\\[0.4cm]\\hline \n"
 
 # output all the alpha-calculation combinations
 for x,y,z,u,v in permutations(indices,5):
@@ -195,6 +266,7 @@ for x,y,z,u,v in permutations(indices,5):
         print("-----------------------------")
     else:
         continue
+
 latex_str+="\\end{longtable}\n"
 latex_str=latex_str.replace("scriptstyle0", "scriptscriptstyle 0")
 with open(argv[2],"w+") as tfile:
