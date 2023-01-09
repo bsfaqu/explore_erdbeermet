@@ -56,3 +56,6 @@ _minted*/
 testfile*
 *.DS_Store
 output/*
+splitstree_commands.nex
+rmet_tmp_scen
+pynet.html

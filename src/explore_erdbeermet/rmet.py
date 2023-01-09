@@ -165,4 +165,4 @@ subprocess.call("python src/explore_erdbeermet/test_erdbeermet.py " + argv[4], s
 
 # Let this point to your splitstree installation
 subprocess.call("/scratch/bruno/SplitsTree/splitstree4/./SplitsTreeCMD -c " + "splitstree_commands.nex" ,shell=True,stdout=subprocess.DEVNULL)
-subprocess.call("xdg-open "+argv[3],shell=True,stdout=subprocess.DEVNULL)
+# subprocess.call("start firefox "+argv[3],shell=True,stdout=subprocess.DEVNULL)

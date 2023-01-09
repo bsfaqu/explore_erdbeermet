@@ -9,7 +9,7 @@ from sys import argv
 import sys
 from itertools import permutations
 import random
-from solve import check_candidate,check_simple_6,solve_greedy_matrix_only
+from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new
 
 
 def rev_a_val(D,a,x,y,z,u,v):
@@ -21,7 +21,7 @@ def init_scenario(filepath):
     # rank_candidates finds alpha values for every possible rev tuple
     candidates=rec.rank_candidates(scenario.D,V)
     fail_wp3 = False
-    with open('output/logging.txt', 'w') as f:
+    with open('output/logging.txt', 'w',encoding="utf-8") as f:
         with redirect_stdout(f):
             print("============================================== ALL")
             tree = rec.recognize(D=scenario.D, B=[], first_candidate_only=False, small_spike=False, print_info=True)
@@ -139,7 +139,10 @@ curr_V=[]
 
 D_original = []
 
-subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+subprocess.call("start firefox file:///C:/Users/Brujo/Documents/GitHub/explore_erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+# subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+
+
 overview_str=""
 while True:
     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -357,6 +360,11 @@ while True:
                 print(f_alpha)
 
                 check_simple_6(curr_D.copy(),c_tuple[0],c_tuple[1],c_tuple[2],f_tuple[0],f_tuple[1],f_tuple[2],c_alpha,f_alpha)
+
+                alphas = rank_candidates(curr_D.copy(), curr_V.copy())
+                rev_a_checking_new(curr_D.copy(),c_tuple[0],c_tuple[1],c_tuple[2],f_tuple[2],c_alpha,alphas)
+
+
             elif("x" in dec_string or "X" in dec_string):
                 curr_D = D_original.copy()
                 curr_V = [i for i in range(0,len(curr_D))]
