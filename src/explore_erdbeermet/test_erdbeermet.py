@@ -9,7 +9,7 @@ from sys import argv
 import sys
 from itertools import permutations
 import random
-from solve import check_candidate
+from solve import check_candidate,check_simple_6,solve_greedy_matrix_only
 
 
 def rev_a_val(D,a,x,y,z,u,v):
@@ -137,6 +137,8 @@ curr_N=len(scenario_string.split("\n"))-1
 curr_D=[]
 curr_V=[]
 
+D_original = []
+
 subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
 overview_str=""
 while True:
@@ -219,6 +221,7 @@ while True:
             print(update_scen_str)
             rnf_candidates(init_scenario_sel("rmet_tmp_scen",comp_cand))
             #print(overview_str)
+
     elif("r" in dec_string or "R" in dec_string):
         r_cand_string=input("Please Enter ONE number (i.e. 0) to remove a candidate pair.\n")
         print(r_cand_string)
@@ -240,6 +243,9 @@ while True:
         print("WITNESS " + str(u))
         print(deltas)
         print(scen.D)
+
+        D_original = scen.D.copy()
+
         input()
         D_copy=scen.D.copy()
         D_copy=rec._matrix_without_index(D_copy,V.index(r_cand[2]))
@@ -268,7 +274,7 @@ while True:
             # print(prnt_str)
             print(curr_D)
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-            dec_string=input("Do you wish to examine consens candidates, perform revR steps, examine a single candidate, or a group of candidates? cC/rR/sS/gG for choice.\n")
+            dec_string=input("Do you wish to examine consens candidates, perform revR steps, examine a single candidate, or a group of candidates, or test 2 candidates on 6 leaves? cC/rR/sS/gG/tT for choice.\n")
             if('c' in dec_string or 'C' in dec_string):
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 for i in range(0,len(agree_cand)):
@@ -334,8 +340,31 @@ while True:
                             D_copy=rec.add_child(D_copy.copy(),parents[s[0]],parents[s[1]],next_N,0.5,dt)
                             next_N=next_N+1
                     rnf_candidates(rec.rank_candidates_selective(D_copy,V,comp_cand))
+            elif("t" in dec_string or "T" in dec_string):
+                for i in range(0,len(agree_cand)):
+                    print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                cand_string_6 = input("Please enter two numbers to examine candidate pairs separately.")
+                c_tuple = agree_cand[int(cand_string_6.split(",")[0])]
+                f_tuple = agree_cand[int(cand_string_6.split(",")[1])]
 
-            if('g' in dec_string or 'G' in dec_string):
+                c_alpha = agree_cand_alphas[int(cand_string_6.split(",")[0])]
+                f_alpha = agree_cand_alphas[int(cand_string_6.split(",")[1])]
+
+                print(c_tuple)
+                print(c_alpha)
+                print(f_tuple)
+                print(f_alpha)
+
+                check_simple_6(curr_D.copy(),c_tuple[0],c_tuple[1],c_tuple[2],f_tuple[0],f_tuple[1],f_tuple[2],c_alpha,f_alpha)
+            elif("x" in dec_string or "X" in dec_string):
+                curr_D = D_original.copy()
+                curr_V = [i for i in range(0,len(curr_D))]
+                curr_N = len(curr_D)
+                t=rnf_candidates(rec.rank_candidates(curr_D,curr_V))
+                agree_cand=t[0]
+                agree_cand_alphas=t[1]
+            elif('g' in dec_string or 'G' in dec_string):
                 all_alphas = rec.rank_candidates(curr_D,curr_V)
                 for i in range(0,len(agree_cand)):
                     print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))

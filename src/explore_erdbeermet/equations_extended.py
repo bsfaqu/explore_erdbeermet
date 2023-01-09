@@ -95,7 +95,8 @@ matrix_update=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes
 lmatrix=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes))]
 lmatrix_update=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes))]
 
-lmatrix1=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes))]
+lmatrix1_based=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes))]
+lmatrix1_based_update=[[0 for x in range(0,len(in_nodes))] for y in range(0,len(in_nodes))]
 
 # preprocess nodes well encounter
 for i in range(0,len(in_nodes)):
@@ -120,7 +121,7 @@ for t in range(2,len(lines)-1):
 
     # Initialize matrix with "base distance" d0xy
     # For the root once we reached iteration 4
-    if(iterations==4):
+    if(iterations==5):
         for x in range(0,len(seen)):
             for y in range(0,len(seen)):
                 if x==y:
@@ -137,10 +138,24 @@ for t in range(2,len(lines)-1):
                     exec("ld0"+seen[y]+seen[x]+" = symbols("+"\"d^{\\scriptstyle0}_{"+seen[y]+""+seen[x]+"}\")")
                     lmatrix[x][y]=eval("ld0"+seen[y]+seen[x]+"")
                     lmatrix[y][x]=eval("ld0"+seen[y]+seen[x]+"")
-
     # Update the matrix when were beyond the root construction
-    elif(iterations>4):
+    elif(iterations>5):
+
+        # Initialize 1-based latex matrix
+        # if iterations ==5:
+        #     for x in range(0,len(seen)):
+        #         for y in range(0,len(seen)):
+        #             if x==y:
+        #                 continue
+        #             else:
+        #                 exec("ld1"+seen[x]+seen[y]+" = symbols("+"\"d^{\\scriptstyle1}_{"+seen[x]+""+seen[y]+"}\")")
+        #                 exec("ld1"+seen[y]+seen[x]+" = symbols("+"\"d^{\\scriptstyle1}_{"+seen[y]+""+seen[x]+"}\")")
+        #                 lmatrix1_based[x][y]=eval("ld1"+seen[y]+seen[x]+"")
+        #                 lmatrix1_based[y][x]=eval("ld1"+seen[y]+seen[x]+"")
+        # if iterations > 5:
+        #     lmatrix1_based_update = lmatrix1_based.copy()
         # Save updated values in updated matrix
+
         matrix_update=matrix.copy()
         lmatrix_update=lmatrix.copy()
 
@@ -177,6 +192,10 @@ for t in range(2,len(lines)-1):
                 lmatrix_update[x][nodes[child]]=lmatrix[x][nodes[lparent]]*eval("la"+str(iterations-4)) + lmatrix[x][nodes[rparent]]*(1-eval("la"+str(iterations-4)))
                 lmatrix_update[nodes[child]][x]=lmatrix[x][nodes[lparent]]*eval("la"+str(iterations-4)) + lmatrix[x][nodes[rparent]]*(1-eval("la"+str(iterations-4)))
 
+                # if iterations > 5:
+                #     lmatrix1_based_update[x][nodes[child]]=lmatrix1_based[x][nodes[lparent]]*eval("la"+str(iterations-5)) + lmatrix1_based[x][nodes[rparent]]*(1-eval("la"+str(iterations-5)))
+                #     lmatrix1_based_update[nodes[child]][x]=lmatrix1_based[x][nodes[lparent]]*eval("la"+str(iterations-5)) + lmatrix1_based[x][nodes[rparent]]*(1-eval("la"+str(iterations-5)))
+
         #R2 - mutation
         for x in range(0,len(seen)):
             for y in range(x+1,len(seen)):
@@ -190,6 +209,7 @@ for t in range(2,len(lines)-1):
                     ####### LATEX OUT #########
                     lmatrix_update[x][y]+=eval("ldel"+str(iterations-4)+"_"+lparent)
                     lmatrix_update[y][x]+=eval("ldel"+str(iterations-4)+"_"+lparent)
+
                 if(seen[x]==rparent or seen[y]==rparent):
                     ####### CONSOLE OUT #########
                     matrix_update[x][y]+=eval("del"+str(iterations-4)+"_"+rparent)
@@ -226,18 +246,18 @@ init_printing()
 
 for x,y,z,u in permutations(indices,4):
     if y>x:
-        if (x== 0 and y==2 and z ==3):
+        if (x== 0 and y==1 and z ==2):
             alpha = get_alpha(lmatrix,seen,x,y,z,1,4,True).simplify()
-        elif x == 0 and y == 2 and z == 4:
+        elif x == 3 and y == 4 and z == 5:
             alpha = get_alpha(lmatrix,seen,x,y,z,0,2,True).simplify()
         else:
             alpha = symbols("\\alpha_{" +str(x)+";"+str(y)+";"+str(z) + "}")
         # deltaz
-        delta_z = get_delta_z(lmatrix, x, y, z).simplify().evalf()
+        delta_z = get_delta_z(lmatrix, x, y, z).simplify().evalf(2)
         #deltax
-        delta_x = get_delta_x(lmatrix, x, y, z, alpha, delta_z).simplify().evalf()
+        delta_x = get_delta_x(lmatrix, x, y, z, alpha, delta_z).simplify().evalf(2)
         #deltay
-        delta_y = get_delta_y(lmatrix, x, y, z, alpha, delta_z).simplify().evalf()
+        delta_y = get_delta_y(lmatrix, x, y, z, alpha, delta_z).simplify().evalf(2)
 
         latex_str += "$\delta^{"+ str(labels[x]) + "}_{" +str(labels[x])+","+str(labels[y])+","+str(labels[z]) + ";" + str(labels[u]) + "}$ "
         latex_str += "& {$\\displaystyle " + latex(delta_x.simplify()) +" $}\\\\[0.4cm]\\hline \n"

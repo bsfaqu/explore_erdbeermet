@@ -250,6 +250,71 @@ def _compute_alpha_xoff(V, D, x, y, z, u, v):
             return -math.inf
         return np.nan
 
+def check_simple_6(distance,a,b,c,d,e,f,alpha_c,alpha_f):
+
+    distance_6_tmp = [[0 for x in range(0,6)] for y in range(0,6)]
+    print(distance_6_tmp)
+
+    print(a)
+    print(b)
+    print(c)
+    print(alpha_c)
+    print(d)
+    print(e)
+    print(f)
+    print(alpha_f)
+
+    elem_arr = [a,b,c,d,e,f]
+    nodes = [x for x in range(0,len(elem_arr))]
+
+    for x in range(0,len(elem_arr)):
+        for y in range(0,len(elem_arr)):
+            distance_6_tmp[x][y] = distance[elem_arr[x],elem_arr[y]]
+
+    distance_6 = np.asarray(distance_6_tmp)
+
+    print(distance_6)
+
+    a_ind = elem_arr.index(a)
+    b_ind = elem_arr.index(b)
+    c_ind = elem_arr.index(c)
+    d_ind = elem_arr.index(d)
+    e_ind = elem_arr.index(e)
+    f_ind = elem_arr.index(f)
+
+    deltas_c = rec._compute_deltas(nodes.copy(),distance_6.copy(),alpha_c,a_ind,b_ind,c_ind,d_ind)
+    deltas_f = rec._compute_deltas(nodes.copy(),distance_6.copy(),alpha_f,d_ind,e_ind,f_ind,a_ind)
+
+    print(deltas_c)
+    print(deltas_f)
+
+    distance_c = rec._update_matrix_return(nodes.copy(),distance_6.copy(),a_ind,b_ind,deltas_c[2],deltas_c[3])
+    distance_c = rec._matrix_without_index(distance_c.copy(),c_ind)
+
+    distance_f = rec._update_matrix_return(nodes.copy(),distance_6.copy(),d_ind,e_ind,deltas_f[2],deltas_f[3])
+    distance_f = rec._matrix_without_index(distance_f.copy(),f_ind)
+
+    print("-----")
+    print(distance_c)
+    print("-----")
+    print(distance_f)
+    print("-----")
+
+    print("------------!-----------------------")
+    print("VALIDATING - " + str(a) + "," + str(b) + ":" + str(c))
+
+    bool_c = solve_greedy_matrix_only(distance_c.copy(),print_info=True,report_dead_ends=True)
+
+    print("<------"+str(bool_c)+"------>")
+    print("------------!-----------------------")
+
+    print("VALIDATING - " + str(d) + "," + str(e) + ":" + str(f))
+
+    bool_f = solve_greedy_matrix_only(distance_f.copy(),print_info=True,report_dead_ends=True)
+
+    print("<------"+str(bool_f)+"------>")
+
+
 def check_triangle(distance, x,y,z, competing_pairs,print_info=True):
     if print_info:
         print(str(x) + "," + str(y) + ":" + str(z) +" VS " + str(competing_pairs))
@@ -407,6 +472,84 @@ def check_triangle(distance, x,y,z, competing_pairs,print_info=True):
     # print("TRIANGLE HOLDS!")
     return True
 
+def test_delta_distances(distance,nodes,alphas,alpha,x,y,z,u,v):
+
+    # TODO: INCORPORATE DELTA-ALPHA-CHECKING
+
+
+    # print("----------------DELTA DISTANCE CHECK---------------------")
+    # print(-0.5*distance[x,y])
+    # print(0.5*distance[x,z])
+    # print(0.5*distance[y,z])
+    # print(-0.5*distance[x,y]+0.5*distance[x,z]+0.5*distance[y,z])
+    #
+    # deltas = rec._compute_deltas(nodes,distance,alpha,x,y,z,w)
+    #
+    # d_xy = distance[x,y] - deltas[2] - deltas[3]
+    # d_xz = distance[x,z] - deltas[2] - deltas[0]
+    # d_yz = distance[y,z] - deltas[0] - deltas[3]
+    #
+    # print("--")
+    # print("DELTA Z - " + str(deltas[0]))
+    # print(-0.5*d_xy)
+    # print(0.5*d_xz)
+    # print(0.5*d_yz)
+    # print(-0.5*d_xy+0.5*d_xz+0.5*d_yz)
+    #
+    # print("---------------------------------------------------------")
+    deltas_xyz = rec._compute_deltas(nodes,distance,alpha,x,y,z,u)
+
+    delta_x = deltas_xyz[2]
+    delta_y = deltas_xyz[3]
+
+    d_0 = distance[x,y] - delta_y - delta_x
+    d_1 = distance[x,y]
+
+    l_u = min(u,v)
+    r_v = max(u,v)
+
+    l = min(x,z)
+    r = max(x,z)
+
+    alpha_xzy = alphas[(l,r,y)][(l_u,r_v)]
+
+    deltas_xzy = rec._compute_deltas(nodes,distance,alpha_xzy,x,z,y,l_u)
+
+    check_delta_y = deltas_xzy[0]
+
+    l = min(y,z)
+    r = max(y,z)
+
+    alpha_yzx = alphas[(l,r,x)][(l_u,r_v)]
+
+    deltas_yzx = rec._compute_deltas(nodes,distance,alpha_yzx,y,z,x,l_u)
+
+    check_delta_x = deltas_yzx[0]
+
+    # Works, but produces valid output for all invalid fringe cases so far.
+    print("----------------DELTA CHECK-------------------")
+    print("CHECK_DELTA_X - " + str(check_delta_x))
+    print("CHECK_DELTA_Y - " + str(check_delta_y))
+    print("P1--")
+    print((delta_x) + alpha*d_0 )
+    print((delta_y) + (1-alpha)*d_0 )
+    print("P2--")
+    print((delta_x) + (1-alpha)*d_0 )
+    print((delta_y) + alpha*d_0 )
+    print("P3--")
+    print((delta_x) + alpha*d_1 )
+    print((delta_y) + (1-alpha)*d_1 )
+    print("P4--")
+    print((delta_x) + (1-alpha)*d_1 )
+    print((delta_y) + alpha*d_1 )
+    print("CHECK5")
+    print((delta_x) + (1-alpha)*d_0 + (delta_y) + alpha*d_0)
+    print(d_1)
+    print(d_0)
+    print("----------------------------------------------")
+
+
+
 
 def check_candidate(distance,x,y,z,alpha,alphas,print_info=False,competing_pairs=[]):
 
@@ -418,17 +561,25 @@ def check_candidate(distance,x,y,z,alpha,alphas,print_info=False,competing_pairs
     for c in range(0,n):
         if(c not in [x,y,z]):
             mock_children += [c]
+
     mock_children = mock_children[0:-1]
+
+    # if z in [0,1,2,3]:
+    #     return False
+
     # print(mock_children[0])
     # print("^")
 
-    for c in mock_children:
-        deltas = rec._compute_deltas(nodes, distance, alpha, x, y, z, c)
-        print("------")
-        print("WITNESS " + str(c))
-        print("DELTA_X: " + str(deltas[2]))
-        print("DELTA_Y: " + str(deltas[3]))
-        print("DELTA_Z: " + str(deltas[0]))
+    # test_delta_distances(distance,nodes,alphas,alpha,x,y,z,mock_children[0],mock_children[1])
+
+    # PRINT ALL DELTAS FOR ALL WITNESSES.
+    # for c in mock_children:
+    #     deltas = rec._compute_deltas(nodes, distance, alpha, x, y, z, c)
+    #     print("------")
+    #     print("WITNESS " + str(c))
+    #     print("DELTA_X: " + str(deltas[2]))
+    #     print("DELTA_Y: " + str(deltas[3]))
+    #     print("DELTA_Z: " + str(deltas[0]))
 
     # test_copy = distance.copy()
     # u = mock_children[0]
@@ -465,12 +616,13 @@ def check_candidate(distance,x,y,z,alpha,alphas,print_info=False,competing_pairs
         # print(deltas)
         return False
 
-    if(print_info):
-        print("CHECKING " + str(x) + "," + str(y) + " : " + str(z))
-        print(alpha)
-        print((alpha-1)/alpha)
-        print(alpha/(alpha-1))
-        print("REAL VALUES:")
+    # if(print_info):
+    #     print("CHECKING " + str(x) + "," + str(y) + " : " + str(z))
+    #     print(alpha)
+    #     print((alpha-1)/alpha)
+    #     print(alpha/(alpha-1))
+    #     print("REAL VALUES:")
+
     try:
         alpha_chk1 = (alpha-1)/alpha
         alpha_chk2 = alpha/(alpha-1)
@@ -482,15 +634,15 @@ def check_candidate(distance,x,y,z,alpha,alphas,print_info=False,competing_pairs
             c2 = max(t[0], t[1])
             l = min(x,z)
             r = max(x,z)
-            if(print_info):
-                print((l,r,y))
-                print((c1,c2))
-                print(alphas[ (l,r,y) ][ (c1,c2) ])
+            # if(print_info):
+            #     print((l,r,y))
+            #     print((c1,c2))
+            #     print(alphas[ (l,r,y) ][ (c1,c2) ])
             a_chk1 = alphas[ (l,r,y) ][ (c1,c2) ]
             l = min(y,z)
             r = max(y,z)
-            if(print_info):
-                print(alphas[ (l,r,x) ][ (c1,c2) ])
+            # if(print_info):
+            #     print(alphas[ (l,r,x) ][ (c1,c2) ])
             a_chk2 = alphas[ (l,r,x) ][ (c1,c2) ]
 
             if (np.isclose(alpha_chk1,a_chk1) or np.isclose(alpha_chk1,a_chk2)) and (np.isclose(alpha_chk2,a_chk1) or np.isclose(alpha_chk2,a_chk2)):
@@ -545,9 +697,9 @@ def check_candidate(distance,x,y,z,alpha,alphas,print_info=False,competing_pairs
                 chk_2=max(w_0,z)
 
                 # numerically print all the compare values
-                if print_info:
-                    print("CHECKING " + str(p_0) + "," + str(p_1) + ":" + str(mock_child) + " WITN: " + str(w_0))
-                    print(str(check_alpha) + " <-> " + str(alphas[ (x,y,mock_child) ][(chk_1,chk_2)]))
+                # if print_info:
+                #     print("CHECKING " + str(p_0) + "," + str(p_1) + ":" + str(mock_child) + " WITN: " + str(w_0))
+                #     print(str(check_alpha) + " <-> " + str(alphas[ (x,y,mock_child) ][(chk_1,chk_2)]))
 
                 if np.isclose(alphas[ (x,y,mock_child) ][(chk_1,chk_2)],check_alpha):
                     continue
@@ -735,7 +887,7 @@ def solve_greedy(n,out,infile="",report_dead_ends=False,print_info=True):
 
 
             chk_cand = check_candidate(distance.copy(),candidate[0],candidate[1],candidate[2],
-                            agree_cand_alphas[i], all_alphas, competing_pairs=competing_pairs, print_info=print_info)
+                            agree_cand_alphas[i], all_alphas, competing_pairs=competing_pairs, print_info=False)
             chk_spks = check_spikes(distance.copy(),candidate[0],candidate[1],candidate[2])
             if print_info:
                 print("CANDIDATE - " + str(candidate))
@@ -861,6 +1013,151 @@ def solve_greedy(n,out,infile="",report_dead_ends=False,print_info=True):
                 return (False, "_NO_PSEUDOMETRIC" + still_metric[1])
     return (True,"")
 
+
+def solve_greedy_matrix_only(distance,report_dead_ends=False,print_info=True):
+
+    nodes = [x for x in range(0,len(distance))]
+
+    distance = np.asarray(distance)
+    swap_distance = distance.copy()
+
+    while len(distance) > 4:
+        if(len(distance) == 5):
+            swap_distance = distance.copy()
+
+        all_alphas = rank_candidates(distance,nodes)
+
+        agree_cand, agree_cand_alphas = rnf_candidates(all_alphas)
+
+        valid = []
+
+        for i in range(0,len(agree_cand)):
+            candidate = agree_cand[i]
+
+            competing_pairs = []
+            for c in agree_cand:
+                if c!=candidate:
+                    competing_pairs += [c]
+
+            chk_cand = check_candidate(distance.copy(),candidate[0],candidate[1],candidate[2],
+                            agree_cand_alphas[i], all_alphas, competing_pairs=competing_pairs, print_info=print_info)
+            chk_spks = check_spikes(distance.copy(),candidate[0],candidate[1],candidate[2])
+            if print_info:
+                print("CANDIDATE - " + str(candidate))
+                print("CHECK CANDIDATES - " + str(chk_cand))
+                print("CHECK SPIKES - " + str(chk_spks))
+
+            if chk_cand and chk_spks:
+                valid += [i]
+        # print(valid)
+        if len(valid) == 0:
+            if print_info:
+                print("DEAD END! NO VALID CANDIDATES")
+            if report_dead_ends:
+                return (False,"_NO_VALID_ALPHAS")
+            else:
+                return (True,"")
+        else:
+            valid_index = random.randint(0,len(valid)-1)
+
+            t = copy.copy(agree_cand[valid[valid_index]])
+            alpha = agree_cand_alphas[valid[valid_index]]
+            witness = -1
+
+
+            for node in nodes:
+                if node != t[0] and node != t[1] and node != t[2]:
+                    witness = node
+                    break
+
+            if print_info:
+                print(str(len(distance)) + " LEFT")
+                print("REMOVING " + str(t))
+                print("WITNESS " + str(witness))
+
+            if witness == -1:
+                if print_info:
+                    print("COULD NOT FIND WITNESS!")
+                return (False, "_NO_WITNESS")
+
+            deltas = rec._compute_deltas(nodes.copy(),distance.copy(),alpha,t[0],t[1],t[2],witness)
+
+            distance = rec._matrix_without_index(distance.copy(),nodes.copy().index(t[2]))
+
+            nodes = nodes[0:-1]
+
+            lparent = t[0]
+            rparent = t[1]
+            if lparent > t[2]:
+                lparent -= 1
+            if rparent > t[2]:
+                rparent -= 1
+
+            distance = rec._update_matrix_return(nodes.copy(),distance.copy(),lparent,rparent,deltas[2],deltas[3])
+
+            still_metric = rec.is_pseudometric(distance.copy(),return_info=True)
+
+            if(len(distance)==4):
+                chk = rec.recognize4_matrix_only(distance.copy())
+                if print_info:
+                    print("METRIC ON 4? - " + str(chk))
+                if(chk):
+                    if print_info:
+                        print("DONE!")
+                else:
+                    for i in range(0,len(valid)):
+
+                        distance = swap_distance.copy()
+
+                        nodes = [x for x in range(0,len(distance))]
+
+                        t = agree_cand[valid[i]]
+                        alpha = agree_cand_alphas[valid[i]]
+
+                        for node in nodes:
+                            if node != t[0] and node != t[1] and node != t[2]:
+                                witness = node
+                                break
+
+                        if print_info:
+                            print("REMOVING " + str(t))
+                            print("WITNESS " + str(witness))
+
+                        deltas = rec._compute_deltas(nodes.copy(),distance.copy(),alpha,t[0],t[1],t[2],witness)
+
+                        distance = rec._matrix_without_index(distance.copy(),nodes.copy().index(t[2]))
+
+                        nodes = nodes[0:-1]
+
+                        lparent = t[0]
+                        rparent = t[1]
+                        if lparent > t[2]:
+                            lparent -= 1
+                        if rparent > t[2]:
+                            rparent -= 1
+
+                        distance = rec._update_matrix_return(nodes.copy(),distance.copy(),lparent,rparent,deltas[2],deltas[3])
+
+                        # print(rec.recognize4_matrix_only(distance.copy()))
+
+                        if rec.recognize4_matrix_only(distance.copy()):
+                            if print_info:
+                                print("STILL PSEUDOMETRIC")
+                            return (True,"")
+                    return (False, "_LAST_4")
+
+            if(still_metric[0]):
+                if print_info:
+                    print("STILL PSEUDOMETRIC")
+                    print()
+                continue
+            else:
+                if print_info:
+                    print("DEAD END!")
+                    print(still_metric)
+                return (False, "_NO_PSEUDOMETRIC" + still_metric[1])
+    return (True,"")
+
 if __name__ == '__main__':
 
     base_string = "EXAMPLE_"
@@ -878,7 +1175,7 @@ if __name__ == '__main__':
     while (True):
         print("RUN " + str(general_counter))
         general_counter += 1
-        check = solve_greedy(10,path+base_string+str(invalid_counter)+".txt",print_info=False,report_dead_ends=False)
+        check = solve_greedy(14,path+base_string+str(invalid_counter)+".txt",print_info=False,report_dead_ends=False)
         if check[0]:
             pass
         else:
