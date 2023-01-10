@@ -248,7 +248,7 @@ def rank_candidates(D,V):
     candidates={}
     for x, y, z in permutations(V, 3):
         # considering x < y suffices
-        if x > y and not (x == 1 and y == 0):
+        if x > y:
             continue
         candidates[(x,y,z)]={}
         for u, v in combinations(V, 2):
