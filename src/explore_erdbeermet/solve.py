@@ -15,6 +15,59 @@ def rev_a_val(D, a, x, y, z, u):
                 2 * a * D[x, y] + D[u, x] - D[u, y] - D[x, y]))
 
 
+def generate_biased_scenario(n):
+    # init output and alphabet
+    scen_string = ""
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    already_added = []
+
+    # add participating letters to first line
+    for i in range(0, n):
+        scen_string += alphabet[i] + ","
+
+    # remove last comma, add starting element (a)
+    scen_string = scen_string[0:-1]
+    scen_string += "\n"
+    scen_string += alphabet[0]
+    scen_string += "\n"
+
+    # the first step is always direct branching of a (random deltas)
+    # .0 is added at the end since otherwise float point calculations fail
+    scen_string += "a,a,b;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "a,b,c;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "a,b,d;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "a,b,e;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "d,e,f;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    already_added += ["a"]
+    already_added += ["b", "c", "d", "e", "f"]
+
+    # randomly draw parents, add new child letters,
+    # parameters are generated randomly.
+    for i in range(6, n):
+
+        p_0 = already_added[random.randint(0, len(already_added) - 1)]
+        p_1 = copy.copy(p_0)
+
+        while p_1 == p_0:
+            p_1 = already_added[random.randint(0, len(already_added) - 1)]
+
+        c = alphabet[i]
+
+        alpha = round(random.random(), 5)
+        del_0 = random.randint(0, 10)
+        del_1 = random.randint(0, 10)
+        del_2 = random.randint(0, 10)
+
+        scen_string += p_0 + "," + p_1 + "," + c + ";" + str(alpha) + "," + str(del_0) + ".0," + str(
+            del_1) + ".0," + str(del_2) + ".0\n"
+        already_added += [c]
+    # print(scen_string[0:-1])
+    return scen_string[0:-1]
 def generate_random_scenario(n):
     # init output and alphabet
     scen_string = ""
@@ -255,6 +308,165 @@ def _compute_alpha_xoff(V, D, x, y, z, u, v):
             return -math.inf
         return np.nan
 
+def compare_candidates(distance, alpha, alphas,b,e,f,a,c,d):
+    nodes = [x for x in range(0, len(distance))]
+
+    deltas = rec._compute_deltas(nodes, distance, alpha, b, e, f, a)
+
+    distance_update = rec._update_matrix_return(nodes,distance.copy(),b,e,deltas[2],deltas[3])
+    distance_update =rec._matrix_without_index(distance_update,f)
+
+    distance = distance_update
+
+    a_orig = a
+    b_orig = b
+    c_orig = c
+    d_orig = d
+    e_orig = e
+
+    if f < a:
+        a -= 1
+    if f < b:
+        b -= 1
+    if f < c:
+        c -= 1
+    if f < d:
+        d -= 1
+    if f < e:
+        e -= 1
+
+    # a,b - d ; c,f
+    zaehler = ( alpha*distance[b,d] + alpha*distance[b,e] - alpha*distance[d,e] + distance[b,c] + distance[d,e] - distance[b,e] - distance[c,d]  )
+    nenner = ( alpha*distance[a,b] + alpha*distance[b,e] - alpha*distance[a,e] + distance[a,e] + distance[b,c] - distance[b,e] - distance[a,c] )
+
+    v_0 = zaehler/nenner
+
+    zaehler = (alpha * distance[a, d] + alpha * distance[a, e] - alpha * distance[d, e] + distance[a, c] + distance[d, e] - distance[a, e] - distance[c, d])
+    nenner = (alpha * distance[b, a] + alpha * distance[a, e] - alpha * distance[b, e] + distance[b, e] + distance[a, c] - distance[a, e] - distance[b, c])
+
+    v_1 = zaehler/nenner
+
+    abdcf = [v_0,v_1]
+
+    print(abdcf)
+    print(alphas[(min(a_orig,b_orig),max(a_orig,b_orig),d_orig)][(min(c_orig,f),max(c_orig,f))])
+    print("--")
+
+    # a,e - d ; c,f
+
+    zaehler = (alpha*distance[b,e]+alpha*distance[d,e]-alpha*distance[b,d]+distance[c,d]-distance[c,e]-distance[d,e])
+    nenner = (alpha*distance[b,e]+alpha*distance[a,e]-alpha*distance[a,b]+distance[a,c]-distance[c,e]-distance[a,e])
+
+    v_0 = zaehler/nenner
+
+    zaehler = (alpha * distance[b, a] + alpha * distance[d, a] - alpha * distance[b, d] + distance[c, d] - distance[c, a] - distance[d, a])
+    nenner = (alpha * distance[b, a] + alpha * distance[a, e] - alpha * distance[e, b] + distance[e, c] - distance[c, a] - distance[a, e])
+
+    v_1 = zaehler/nenner
+
+    aedcf = [v_0,v_1]
+    print(aedcf)
+    print(alphas[(min(a_orig,e_orig),max(a_orig,e_orig),d_orig)][(min(c_orig,f),max(c_orig,f))])
+    print("--")
+
+    # b,c - d ; a,f
+
+    zaehler = (alpha*distance[b,c]+alpha*distance[d,e]-alpha*distance[c,e]-alpha*distance[b,d]+distance[a,d]+distance[c,e]-distance[a,c]-distance[d,e])
+    nenner = (alpha*distance[b,c]+alpha*distance[b,e]-alpha*distance[c,e]+distance[a,b]+distance[c,e]-distance[a,c]-distance[b,e])
+
+    v_0 = zaehler/nenner
+
+    zaehler = (alpha * distance[b, c] + alpha * distance[d, e] - alpha * distance[b, e] - alpha * distance[c, d] + distance[a, d] + distance[b, e] - distance[a, b] - distance[d, e])
+    nenner = (alpha * distance[b, c] + alpha * distance[c, e] - alpha * distance[b, e] + distance[a, c] + distance[b, e] - distance[a, b] - distance[c, e])
+
+    v_1 = zaehler/nenner
+
+    bcdaf = [v_0,v_1]
+
+    print(bcdaf)
+    print( alphas[(min(b_orig,c_orig),max(b_orig,c_orig),d_orig)][(min(a_orig,f),max(a_orig,f))] )
+    print("--")
+
+    # c,e - d ; a,f
+
+    zaehler = ( alpha*distance[b,e] + alpha*distance[d,e] - alpha*distance[b,d] +distance[a,d]-distance[a,e]-distance[d,e] )
+    nenner = ( alpha*distance[b,e]+alpha*distance[c,e]-alpha*distance[b,c]+distance[a,c]-distance[a,e]-distance[c,e] )
+
+    v_0 = zaehler/nenner
+
+    zaehler = (alpha * distance[b, c] + alpha * distance[d, c] - alpha * distance[b, d] + distance[a, d] - distance[a, c] - distance[d, c])
+    nenner = (alpha * distance[b, c] + alpha * distance[c, e] - alpha * distance[b, e] + distance[a, e] - distance[a, c] - distance[c, e])
+
+    v_1 = zaehler / nenner
+
+    cedaf = [v_0,v_1]
+
+    print(cedaf)
+    print( alphas[(min(c_orig,e_orig),max(c_orig,e_orig),d_orig)][(min(a_orig,f),max(a_orig,f))] )
+
+    # c,e - f ; a b
+
+    zaehler = alpha*(distance[a,b]-distance[a,e]+distance[b,e])
+    nenner = distance[a,c]-distance[a,e]-distance[b,c]+distance[b,e]
+
+    print(zaehler/nenner)
+    print(alphas[(min(c_orig,e_orig),max(c_orig,e_orig),f)][(min(a_orig,b_orig),max(a_orig,b_orig))])
+    print("--")
+
+    # c,e - f ; a d
+
+    zaehler = alpha*(distance[a,b]-distance[a,e]-distance[b,d]+distance[d,e])
+    nenner = distance[a,c]-distance[a,e]-distance[c,d]+distance[d,e]
+
+    print(zaehler/nenner)
+    print(alphas[(min(c_orig,e_orig),max(c_orig,e_orig),f)][(min(a_orig,d_orig),max(a_orig,d_orig))])
+    print("--")
+
+    # c,e - f ; b d
+    # distance[]
+
+    zaehler =  alpha*(-distance[b,d]-distance[b,e]+distance[d,e])
+    nenner = distance[b,c]-distance[b,e]-distance[c,d]+distance[d,e]
+
+    print(zaehler/nenner)
+    print(alphas[(min(c_orig,e_orig),max(c_orig,e_orig),f)][(min(b_orig,d_orig),max(b_orig,d_orig))])
+    print("--")
+
+    # a,e - f ; b,d
+
+    zaehler = alpha*(-distance[b,d]-distance[b,e]+distance[d,e])
+    nenner = distance[a,b]-distance[a,d]-distance[b,e]+distance[d,e]
+
+    print(zaehler/nenner)
+    print(alphas[(min(a_orig,e_orig),max(a_orig,e_orig),f)][(min(b_orig,d_orig),max(b_orig,d_orig))])
+    print("--")
+
+    # d,f - a ; b e
+
+    zaehler = 2*alpha*distance[b,e] + distance[a,b] - distance[a,e] - distance[b,e]
+    nenner = 2*alpha*distance[b,e] + distance[b,d]-distance[b,e]-distance[d,e]
+
+    print(zaehler/nenner)
+    print(alphas[(min(d_orig,f),max(d_orig,f),a_orig)][(min(b_orig,e_orig),max(b_orig,e_orig))])
+    print("--")
+
+    # d,f - e ; a,b
+
+    zaehler = alpha*(distance[a,b]-distance[a,e]+distance[b,e])
+    nenner = alpha*distance[a,b]-alpha*distance[a,e]+alpha*distance[b,e]-distance[a,d]+distance[a,e]+distance[b,d]-distance[b,e]
+
+    print(zaehler / nenner)
+    print(alphas[(min(d_orig, f), max(d_orig, f), e_orig)][(min(a_orig, b_orig), max(a_orig, b_orig))])
+    print("--")
+
+    # d,f - e ; a,c
+
+    zaehler = alpha*(distance[a,b]-distance[a,e]-distance[b,c]+distance[c,e])
+    nenner = alpha*distance[a,b]-alpha*distance[a,e]-alpha*distance[b,c]+alpha*distance[c,e]-distance[a,d]+distance[a,e]+distance[c,d]-distance[c,e]
+
+    print(zaehler / nenner)
+    print(alphas[(min(d_orig, f), max(d_orig, f), e_orig)][(min(a_orig, c_orig), max(a_orig, c_orig))])
+    print("--")
 def rev_alpha_diff_parents(distance,x,y,z,w_0,alpha):
 
     # print("COMPUTING FORWARD ALPHA FOR")
@@ -746,9 +958,9 @@ def check_candidate(distance, x, y, z, alpha, alphas, print_info=False, competin
                 chk_2 = max(w_0, z)
 
                 # numerically print all the compare values
-                # if print_info:
-                #     print("CHECKING " + str(p_0) + "," + str(p_1) + ":" + str(mock_child) + " WITN: " + str(w_0))
-                #     print(str(check_alpha) + " <-> " + str(alphas[ (x,y,mock_child) ][(chk_1,chk_2)]))
+                if print_info:
+                    print("CHECKING " + str(p_0) + "," + str(p_1) + ":" + str(mock_child) + " WITN: " + str(w_0))
+                    print(str(check_alpha) + " <-> " + str(alphas[ (x,y,mock_child) ][(chk_1,chk_2)]))
 
                 if np.isclose(alphas[(x, y, mock_child)][(chk_1, chk_2)], check_alpha):
                     continue
@@ -904,7 +1116,7 @@ def solve_greedy(n, out, infile="", report_dead_ends=False, print_info=True):
     # # TODO: CHECK EXAMPLE_2, SPIKE TEST FAILS
 
     if (infile == ""):
-        scenario = generate_random_scenario(n)
+        scenario = generate_biased_scenario(n)
     else:
         with open(infile, "r") as file:
             scenario = file.read()

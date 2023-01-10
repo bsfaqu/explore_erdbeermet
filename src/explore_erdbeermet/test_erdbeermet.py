@@ -9,7 +9,7 @@ from sys import argv
 import sys
 from itertools import permutations
 import random
-from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new
+from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new, compare_candidates
 
 
 def rev_a_val(D,a,x,y,z,u,v):
@@ -364,11 +364,13 @@ while True:
                 alphas = rank_candidates(curr_D.copy(), curr_V.copy())
                 rev_a_checking_new(curr_D.copy(),c_tuple[0],c_tuple[1],c_tuple[2],f_tuple[2],c_alpha,alphas)
 
+                compare_candidates(curr_D.copy(),c_alpha,alphas,c_tuple[0],c_tuple[1],c_tuple[2],f_tuple[0],f_tuple[1],f_tuple[2])
+
 
             elif("x" in dec_string or "X" in dec_string):
                 curr_D = D_original.copy()
                 curr_V = [i for i in range(0,len(curr_D))]
-                curr_N = len(curr_D)
+                curr_N = len(curr_D)-1
                 t=rnf_candidates(rec.rank_candidates(curr_D,curr_V))
                 agree_cand=t[0]
                 agree_cand_alphas=t[1]
@@ -748,7 +750,7 @@ while True:
                 #    print("-----------------------------------------------------")
                 #    print("HYBRIDIZATION - " + "("+str(parent[1])+", "+str(i)+": "+str(next_N)+")")
                 #    D_copy2=rec.add_child(D_copy.copy(),parent[1],i,next_N,0.5,dt)
-                #    rnf_candidates(rec.rank_candidates_selective(D_copy2,V,[comp_cand]))
+                #    rnf_candidates(rec._selective(D_copy2,V,[comp_cand]))
                 dec_str2=input("Y/y for adding spikes?")
                 if("y" in dec_str2 or "Y" in dec_str2):
                     while True:
