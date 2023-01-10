@@ -1445,7 +1445,7 @@ if __name__ == '__main__':
     while (True):
         print("RUN " + str(general_counter))
         general_counter += 1
-        check = solve_greedy(14, path + base_string + str(invalid_counter) + ".txt", print_info=False,
+        check = solve_greedy(12, path + base_string + str(invalid_counter) + ".txt", print_info=False,
                              report_dead_ends=False)
         if check[0]:
             pass
