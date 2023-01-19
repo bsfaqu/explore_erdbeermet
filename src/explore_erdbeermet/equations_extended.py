@@ -126,7 +126,7 @@ for t in range(2, len(lines) - 1):
 
     # Initialize matrix with "base distance" d0xy
     # For the root once we reached iteration 4
-    if (iterations == 5):
+    if (iterations == 4):
         for x in range(0, len(seen)):
             for y in range(0, len(seen)):
                 if x == y:
@@ -146,7 +146,7 @@ for t in range(2, len(lines) - 1):
                     lmatrix[x][y] = eval("ld0" + seen[y] + seen[x] + "")
                     lmatrix[y][x] = eval("ld0" + seen[y] + seen[x] + "")
     # Update the matrix when were beyond the root construction
-    elif (iterations > 5):
+    elif (iterations > 4):
 
         # Initialize 1-based latex matrix
         # if iterations ==5:
@@ -307,6 +307,10 @@ for x, y, z, u, v in permutations(indices, 5):
         print("-----------------------------")
     else:
         continue
+
+for x,y,z,u in permutations(indices,4):
+    if x>y>z>u:
+        split_x
 
 latex_str += "\\end{longtable}\n"
 latex_str = latex_str.replace("scriptstyle0", "scriptscriptstyle 0")

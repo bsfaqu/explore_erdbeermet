@@ -8,12 +8,71 @@ import time
 import math
 from itertools import permutations, combinations
 from sys import argv
+import pathlib
+import subprocess
 
 
 def rev_a_val(D, a, x, y, z, u):
     return ((-a * D[x, z] + a * D[z, y] + a * D[x, y] + D[u, z] - D[z, y] - D[u, y]) / (
                 2 * a * D[x, y] + D[u, x] - D[u, y] - D[x, y]))
 
+def generate_biased_scenario_minor(n):
+    # init output and alphabet
+    scen_string = ""
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    already_added = []
+
+    # add participating letters to first line
+    for i in range(0, n):
+        scen_string += alphabet[i] + ","
+
+    # remove last comma, add starting element (a)
+    scen_string = scen_string[0:-1]
+    scen_string += "\n"
+    scen_string += alphabet[0]
+    scen_string += "\n"
+
+    # the first step is always direct branching of a (random deltas)
+    # .0 is added at the end since otherwise float point calculations fail
+    scen_string += "a,a,b;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "a,b,c;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "b,c,d;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "c,d,e;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "c,d,f;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "c,d,g;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    scen_string += "f,g,h;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+    already_added += ["a"]
+    already_added += ["b", "c", "d", "e", "f", "g", "h"]
+
+    # randomly draw parents, add new child letters,
+    # parameters are generated randomly.
+    for i in range(8, n):
+
+        p_0 = already_added[random.randint(0, len(already_added) - 1)]
+        p_1 = copy.copy(p_0)
+
+        while p_1 == p_0:
+            p_1 = already_added[random.randint(0, len(already_added) - 1)]
+
+        c = alphabet[i]
+
+        alpha = round(random.random(), 5)
+        del_0 = random.randint(0, 10)
+        del_1 = random.randint(0, 10)
+        del_2 = random.randint(0, 10)
+
+        scen_string += p_0 + "," + p_1 + "," + c + ";" + str(alpha) + "," + str(del_0) + ".0," + str(
+            del_1) + ".0," + str(del_2) + ".0\n"
+        already_added += [c]
+    # print(scen_string[0:-1])
+    return scen_string[0:-1]
 
 def generate_biased_scenario(n):
     # init output and alphabet
@@ -239,7 +298,9 @@ def make_distance_matrix(scenario):
     seen = set()
     seen.add(0)
 
-    for t in range(2, len(lines) - 1):
+    for t in range(2, len(lines)):
+        if lines[t]=="":
+            continue
         # Parse part of each insert line
         insert = lines[t].split(";")[0]
         params = lines[t].split(";")[1]
@@ -740,6 +801,184 @@ def check_triangle(distance, x, y, z, competing_pairs, print_info=True):
     # print("TRIANGLE HOLDS!")
     return True
 
+def test_deltas_new(distance,alpha_f,alpha_d,b,e,f,a,c,d):
+    nodes = [x for x in range(0,len(distance))]
+
+    deltas_f = rec._compute_deltas(nodes, distance, alpha_f, b, e, f, a)
+    deltas_d = rec._compute_deltas(nodes, distance, alpha_d, a, c, d, b)
+    # deltas_d_2 = rec._compute_deltas(nodes, distance, alpha_d, a, c, d, e)
+    # deltas_d_3 = rec._compute_deltas(nodes, distance, alpha_d, a, c, d, f)
+
+    delta_a = deltas_d[2]
+    delta_c = deltas_d[3]
+
+    delta_b = deltas_f[2]
+    delta_e = deltas_f[3]
+
+    distance_update = rec._update_matrix_return(nodes, distance.copy(), b, e, delta_b, delta_e)
+    distance_update = rec._matrix_without_index(distance_update.copy(), nodes.index(f))
+
+    if a > f:
+        a-=1
+    if b > f:
+        b-=1
+    if c > f:
+        c-=1
+    if d > f:
+        d-=1
+    if e > f:
+        e-=1
+
+
+    check_delta_a_numerator = 0.5* (distance_update[a,b]*distance_update[a,c]-
+                                    distance_update[a,b]*distance_update[a,d]-
+                                    distance_update[a,b]*distance_update[c,e]+
+                                    distance_update[a,b]*distance_update[d,e]-
+                                    distance_update[a,c]*distance_update[a,e]-
+                                    distance_update[a,c]*distance_update[b,d]+
+                                    distance_update[a,c]*distance_update[d,e]+
+                                    distance_update[a,d]*distance_update[a,e]+
+                                    distance_update[a,d]*distance_update[b,c]-
+                                    distance_update[a,d]*distance_update[c,e]+
+                                    distance_update[a,e]*distance_update[b,c]-
+                                    distance_update[a,e]*distance_update[b,d]-
+                                    distance_update[b,c]*distance_update[d,e]+
+                                    distance_update[b,d]*distance_update[c,e])
+
+    check_delta_a_denominator = distance_update[b,c]-distance_update[b,d]-distance_update[c,e]+distance_update[d,e]
+
+    check_delta_c_numerator = 0.5*(distance_update[a,b]*distance_update[c,d]+
+                                   distance_update[a,b]*distance_update[c,e]-
+                                   distance_update[a,b]*distance_update[d,e]+
+                                   distance_update[a,c]*distance_update[b,c]-
+                                   distance_update[a,c]*distance_update[b,d]-
+                                   distance_update[a,c]*distance_update[c,e]+
+                                   distance_update[a,c]*distance_update[d,e]-
+                                   distance_update[a,e]*distance_update[b,c]+
+                                   distance_update[a,e]*distance_update[b,d]-
+                                   distance_update[a,e]*distance_update[c,d]-
+                                   distance_update[b,c]*distance_update[c,d]+
+                                   distance_update[b,c]*distance_update[d,e]-
+                                   distance_update[b,d]*distance_update[c,e]+
+                                   distance_update[c,d]*distance_update[c,e])
+    check_delta_c_denominator = distance_update[a,b]-distance_update[a,e]-distance_update[b,d]+distance_update[d,e]
+
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print("DELTAS AFTER REMOVING - " + str(f))
+    print(str(delta_a) + " <-> " + str(check_delta_a_numerator/check_delta_a_denominator))
+    print(str(delta_c) + " <-> " + str(check_delta_c_numerator/check_delta_c_denominator))
+    # print(str(deltas_d_2[2]))
+    # print(str(deltas_d_3[2]))
+    print(deltas_f)
+    print(deltas_d)
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+def visualize_splitstree(indist,outnex,outpng,elem_arr):
+
+    dist_str=""
+
+    labels = [str(x) for x in elem_arr]
+
+    dist = [[[0.0] for x in elem_arr] for x in elem_arr]
+
+
+    for x in elem_arr:
+        for y in elem_arr:
+            dist[elem_arr.index(x)][elem_arr.index(y)] = indist[x,y]
+    dist = np.asarray(dist)
+
+    max_tracker = (-1,-1,0)
+
+    x=0
+    y=0
+    z=0
+    u=0
+
+    if len(elem_arr) == 4:
+        for x in elem_arr:
+            for y in elem_arr:
+                if(y==x):
+                    continue
+                for x_1 in elem_arr:
+                    for x_2 in elem_arr:
+                        if x_1 in [x,y] or x_2 in [x,y] or x_1==x_2:
+                            continue
+                        if(indist[x,y]+indist[x_1,x_2] > max_tracker[2]):
+                            max_tracker = (x,y,indist[x,y]+indist[x_1,x_2])
+        x=max_tracker[0]
+        y=max_tracker[1]
+        for e in elem_arr:
+            if(e not in [x,y]):
+                z=e
+                break
+        for e in elem_arr:
+            if(e not in [x,y,z]):
+                u=e
+                break
+
+    # beta_xz_yu = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(z)]-dist[elem_arr.index(y),elem_arr.index(u)])
+
+    # beta_xu_yz = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(u)]-dist[elem_arr.index(y),elem_arr.index(z)])
+
+
+    importfile=str(pathlib.Path().resolve())+"/"+outnex
+
+    for i in range(0,len(dist)):
+        for j in range(0,len(dist)):
+            if(i<=j):
+                dist_str+=str(dist[i,j])+"\t"
+            else:
+                dist_str+="\t"
+        dist_str+="\n"
+    with open(outnex,"w+") as outfile:
+        outfile.write("#nexus\n")
+        outfile.write("BEGIN Taxa;\n")
+        outfile.write("DIMENSIONS ntax=" + str(len(dist))+";\n")
+        outfile.write("TAXLABELS\n")
+        for i in range(0,len(labels)):
+            outfile.write("["+str(i+1)+"]"+"'"+str(labels[i])+"'\n")
+        outfile.write(";\n")
+        outfile.write("END; [Taxa]\n")
+        outfile.write("BEGIN Distances;\n")
+        outfile.write("DIMENSIONS ntax=" + str(len(dist))+";\n")
+        outfile.write("FORMAT labels=no diagonal triangle=upper;\n")
+        outfile.write("MATRIX\n")
+        outfile.write(dist_str)
+        outfile.write(";\n")
+        outfile.write("END; [Distances]\n")
+        outfile.write("BEGIN st_Assumptions;\nuptodate;\ndisttransform=SplitDecomposition;\nsplitstransform=EqualAngle;\nSplitsPostProcess filter=dimension value=4;\n exclude  no missing;\nautolayoutnodelabels;\nEND; [st_Assumptions]")
+    with open("splitstree_commands.nex","w+") as f:
+        f.write("LOAD FILE="+importfile+";\n")
+        f.write("UPDATE;\n")
+        f.write("UPDATE;\n")
+        f.write("EXPORTGRAPHICS format=PNG file="+str(pathlib.Path().resolve())+"/"+outpng+" REPLACE=yes;\n")
+        f.write("QUIT\n")
+    subprocess.call("/scratch/bruno/SplitsTree/splitstree4/./SplitsTreeCMD -c " + "splitstree_commands.nex" ,shell=True)
+    subprocess.call("firefox " + str(pathlib.Path().resolve())+"/"+outpng,shell=True)
+
+    # print(x)
+    # print(y)
+    # print(u)
+    # print(z)
+    # swp = u
+    # u = z
+    # z = swp
+    # print("!!!!!!!!!!!!!!!!!!")
+    # print(max_tracker)
+    # print("BOXSIDE_1 : " + str(beta_xz_yu))
+    # print("BOXSIDE_2 : " + str(beta_xu_yz))
+
+    # print(x)
+    # print(y)
+    # print(u)
+    # print(z)
+    # beta_xz_yu = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(z)]-dist[elem_arr.index(y),elem_arr.index(u)])
+    #
+    # beta_xu_yz = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(u)]-dist[elem_arr.index(y),elem_arr.index(z)])
+    # print("BOXSIDE_1_perm : " + str(beta_xz_yu))
+    # print("BOXSIDE_2_perm : " + str(beta_xu_yz))
+
+    print("!!!!!!!!!!!!!!!!!")
 
 def test_delta_distances(distance, nodes, alphas, alpha, x, y, z, u, v):
     # TODO: INCORPORATE DELTA-ALPHA-CHECKING
@@ -876,6 +1115,8 @@ def check_candidate(distance, x, y, z, alpha, alphas, print_info=False, competin
     if (deltas[1] < 0 and not np.isclose(deltas[1], 0.0)) or (deltas[2] < 0 and not np.isclose(deltas[2], 0.0)) or (
             deltas[3] < 0 and not np.isclose(deltas[3], 0.0)):
         # print(deltas)
+        if print_info:
+            print("DELTAS!")
         return False
 
     # if(print_info):
@@ -911,6 +1152,8 @@ def check_candidate(distance, x, y, z, alpha, alphas, print_info=False, competin
                     np.isclose(alpha_chk2, a_chk1) or np.isclose(alpha_chk2, a_chk2)):
                 continue
             else:
+                if print_info:
+                    print("alpha and 1/alpha check")
                 return False
     except:
         print("ALPHA CHECK DIDNT WORK ZERO DIVISION")
@@ -965,7 +1208,8 @@ def check_candidate(distance, x, y, z, alpha, alphas, print_info=False, competin
                 if np.isclose(alphas[(x, y, mock_child)][(chk_1, chk_2)], check_alpha):
                     continue
                 else:
-                    print("PROPER CAND CHECK FALSE------------------------------------------------>")
+                    if print_info:
+                        print("PROPER CAND CHECK FALSE------------------------------------------------>")
                     return False
     if len(competing_pairs) != 0 and len(distance) > 4:
         # print("TRY CHECK TRIANGLE")
@@ -973,7 +1217,8 @@ def check_candidate(distance, x, y, z, alpha, alphas, print_info=False, competin
         if check:
             pass
         else:
-            # print("TRIANGLE HURT")
+            if print_info:
+                print("TRIANGLE HURT")
             return False
     return True
 
@@ -1116,7 +1361,7 @@ def solve_greedy(n, out, infile="", report_dead_ends=False, print_info=True):
     # # TODO: CHECK EXAMPLE_2, SPIKE TEST FAILS
 
     if (infile == ""):
-        scenario = generate_biased_scenario(n)
+        scenario = generate_biased_scenario_minor(n)
     else:
         with open(infile, "r") as file:
             scenario = file.read()
@@ -1287,7 +1532,6 @@ def solve_greedy_matrix_only(distance, report_dead_ends=False, print_info=True):
     distance = np.asarray(distance)
     swap_distance = distance.copy()
 
-    print(distance)
 
     while len(distance) > 4:
         if (len(distance) == 5):
@@ -1431,7 +1675,7 @@ def solve_greedy_matrix_only(distance, report_dead_ends=False, print_info=True):
 if __name__ == '__main__':
 
     base_string = "EXAMPLE_"
-    invalid_counter = 0
+    invalid_counter = 7
 
     general_counter = 0
 
@@ -1445,11 +1689,11 @@ if __name__ == '__main__':
     while (True):
         print("RUN " + str(general_counter))
         general_counter += 1
-        check = solve_greedy(12, path + base_string + str(invalid_counter) + ".txt", print_info=False,
+        check = solve_greedy(9, path + base_string + str(invalid_counter) + ".txt", print_info=False,
                              report_dead_ends=False)
         if check[0]:
             pass
         else:
             invalid_counter += 1
-        if (general_counter > 100000):
+        if (general_counter > 1000000):
             break

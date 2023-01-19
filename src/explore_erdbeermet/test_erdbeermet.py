@@ -9,7 +9,7 @@ from sys import argv
 import sys
 from itertools import permutations
 import random
-from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new, compare_candidates
+from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new, compare_candidates, test_deltas_new, visualize_splitstree
 
 
 def rev_a_val(D,a,x,y,z,u,v):
@@ -139,8 +139,8 @@ curr_V=[]
 
 D_original = []
 
-subprocess.call("start firefox file:///C:/Users/Brujo/Documents/GitHub/explore_erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
-# subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+# subprocess.call("start firefox file:///C:/Users/Brujo/Documents/GitHub/explore_erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
 
 
 overview_str=""
@@ -343,6 +343,12 @@ while True:
                             D_copy=rec.add_child(D_copy.copy(),parents[s[0]],parents[s[1]],next_N,0.5,dt)
                             next_N=next_N+1
                     rnf_candidates(rec.rank_candidates_selective(D_copy,V,comp_cand))
+            elif("v" in dec_string or "V" in dec_string):
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                cand_string_4 = input("Please enter four number csv to examine box graph.")
+                arr = [int(x) for x in cand_string_4.split(",")]
+                visualize_splitstree(curr_D,"COMMANDSOUT.nex","4BOX.png",arr)
+
             elif("t" in dec_string or "T" in dec_string):
                 for i in range(0,len(agree_cand)):
                     print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
@@ -365,6 +371,9 @@ while True:
                 rev_a_checking_new(curr_D.copy(),c_tuple[0],c_tuple[1],c_tuple[2],f_tuple[2],c_alpha,alphas)
 
                 compare_candidates(curr_D.copy(),c_alpha,alphas,c_tuple[0],c_tuple[1],c_tuple[2],f_tuple[0],f_tuple[1],f_tuple[2])
+
+                test_deltas_new(curr_D.copy(),f_alpha,c_alpha,f_tuple[0],f_tuple[1],f_tuple[2],c_tuple[0],c_tuple[1],c_tuple[2])
+
 
 
             elif("x" in dec_string or "X" in dec_string):
