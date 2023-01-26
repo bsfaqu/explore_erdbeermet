@@ -26,7 +26,6 @@ start_node=lines[1]
 
 erdbeer_string=""
 
-
 for i in range(0,len(in_nodes)):
     nodes[in_nodes[i]]=i
     labels+=[in_nodes[i]]

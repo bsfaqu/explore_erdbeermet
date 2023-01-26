@@ -36,6 +36,7 @@ def init_scenario(filepath):
 
     return candidates
 
+
 def get_matrix(filepath):
     scenario=sim.load(filepath)
     return scenario.D
@@ -46,6 +47,68 @@ def init_scenario_sel(filepath,in_candidates):
     # rank_candidates finds alpha values for every possible rev tuple
     candidates=rec.rank_candidates_selective(scenario.D,V,in_candidates)
     return candidates
+
+def rnf_candidates_table(x,y,z,candidates,nodes):
+    out_table=""
+
+    out_table += str((x,y,z)) + "\t"
+    for u in nodes:
+        if(u in [x,y,z]):
+            continue
+        out_table += str(u) + "\t"
+
+    out_table = out_table[0:-1]
+    out_table += "\n"
+
+    for u in nodes:
+        if(u in [x,y,z]):
+            continue
+        out_table += str(u) + "\t\t"
+        for v in nodes:
+            if v in [x,y,z,u]:
+                if (v == u):
+                    out_table += "-\t"
+                continue
+            if candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))] < 0:
+                    out_table += "< 0\t"
+            elif candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))] > 1 :
+                    out_table += "> 1\t"
+            elif math.isnan(candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))]) :
+                    out_table += "NaN\t"
+            else:
+                    out_table += str(round(candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))],2))+"\t"
+        out_table += "\n"
+
+    out_table += "\n\n******************************************** \n\n"    
+    out_table += str((x,y,z)) + "\t"
+    for u in nodes:
+        if(u in [x,y,z]):
+            continue
+        out_table += str(u) + "\t"
+
+    out_table = out_table[0:-1]
+    out_table += "\n"
+
+    for u in nodes:
+        if(u in [x,y,z]):
+            continue
+        out_table += str(u) + "\t\t"
+        for v in nodes:
+            if v in [x,y,z,u]:
+                if (v == u):
+                    out_table += "-\t"
+                continue
+            if candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))] < 0:
+                    out_table += str(round(candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))],2))+"\t"
+            elif candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))] > 1 :
+                    out_table += str(round(candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))],2))+"\t"
+            elif math.isnan(candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))]) :
+                    out_table += str(round(candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))],2))+"\t"
+            else:
+                    out_table += str(round(candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))],2))+"\t"
+        out_table += "\n"
+    out_table = out_table[0:-1]
+    return out_table
 
 def rnf_candidates(candidates):
     sort_cand={}
@@ -345,9 +408,124 @@ while True:
                     rnf_candidates(rec.rank_candidates_selective(D_copy,V,comp_cand))
             elif("v" in dec_string or "V" in dec_string):
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                cand_string_4 = input("Please enter four number csv to examine box graph.")
+                cand_string_4 = input("Please enter candidate indizes csv to examine box graph.")
                 arr = [int(x) for x in cand_string_4.split(",")]
                 visualize_splitstree(curr_D,"COMMANDSOUT.nex","4BOX.png",arr)
+            elif "m" in dec_string or "M" in dec_string: # MAP OUT
+                # cand_string_3 = input("Please enter children to examine as CSV!")
+                #
+                # cand_array = [int(x) for x in cand_string_3.split(",")]
+                #
+                # alphas = rec.rank_candidates(curr_D.copy(),curr_V.copy())
+
+                cand_string_3 = input("Please enter children to examine as CSV!")
+
+                cand_array = [(int(x.split(",")[0]),int(x.split(",")[1])) for x in cand_string_3.split(";")]
+
+                alphas = rec.rank_candidates(curr_D.copy(),curr_V.copy())
+
+                for t in cand_array:
+                    z = t[0]
+                    v = t[1]
+                    for x in range(0,len(curr_V)):
+                        for y in range(0,len(curr_V)):
+                            if y <= x or z in [x,y] or v in [x,y]:
+                                continue
+                            # print("--------------------")
+                            # print("(" + str(x) + ", " + str(y) + ": " + str(z) + ")  ")
+                            invalid_counter = 0
+                            negative_counter = 0
+                            positive_counter = 0
+                            for u in range(0,len(curr_V)):
+                                if u not in [x,y,z,v]:
+                                    if alphas[(x,y,z)][(min(u,v),max(u,v))]<0:
+                                        # print(str(u) + " - " + str(v) + " <0")
+                                        invalid_counter += 1
+                                        negative_counter += 1
+                                    if alphas[(x,y,z)][(min(u,v),max(u,v))]>1:
+                                        invalid_counter += 1
+                                        positive_counter += 1
+                                        # print(str(u) + " - " + str(v) + " >1")
+                            if invalid_counter < 1:
+                                print("--------------------")
+                                print("(" + str(x) + ", " + str(y) + ": " + str(z) + ")  ")
+                                print("INVALID - " + str(invalid_counter))
+
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+                    x = t[1]
+                    for y in range(0,len(curr_V)):
+                        if z in [x,y]:
+                            continue
+                        # print("--------------------")
+                        # print("(" + str(x) + ", " + str(y) + ": " + str(z) + ")  ")
+                        invalid_counter = 0
+                        negative_counter = 0
+                        positive_counter = 0
+                        for u in range(0,len(curr_V)):
+                            for v in range(0,len(curr_V)):
+                                if v<=u or u in [x,y,z] or v in [x,y,z]:
+                                    continue
+                                if alphas[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))]<0:
+                                    # print(str(u) + " - " + str(v) + " <0")
+                                    invalid_counter += 1
+                                    negative_counter += 1
+                                if alphas[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))]>1:
+                                    # print(str(u) + " - " + str(v) + " >1")
+                                    invalid_counter += 1
+                                    positive_counter += 1
+                        if invalid_counter < 1:
+                            print("--------------------")
+                            print("(" + str(x) + ", " + str(y) + ": " + str(z) + ")  ")
+                            print("INVALID - " + str(invalid_counter))
+                        # print(">1 - "+ str(positive_counter))
+                        # print("<0 - "+ str(negative_counter))
+
+
+                                        # print("(" + str(x) + ", " + str(y) + ": " + str(z) + ")  " + str(u) + "-" + str(v) + ":  " + str(round(alphas[(x,y,z)][(min(u,v),max(u,v))],2)) )
+                                         # print(str(u) + "-" + str(v) + ":  " + str(round(alphas[(x,y,z)][(min(u,v),max(u,v))],2)) )
+                                    # print(alphas[(x,y,z)][(min(u,v),max(u,v))])
+
+
+                # for t in cand_array:
+                #     z = t[0]
+                #     v = t[1]
+                #     for x in range(0,len(curr_V)):
+                #         for y in range(0,len(curr_V)):
+                #             if y <= x or z in [x,y] or v in [x,y]:
+                #                 continue
+                #             print("------------------")
+                #             print(str(x) + "," + str(y) + ":" + str(z))
+                #             for u in range(0,len(curr_V)):
+                #                 if u not in [x,y,z,v]:
+                #                     print(str(u) + "-" + str(v) + ":  " + str(round(alphas[(x,y,z)][(min(u,v),max(u,v))],2)))
+                #                     # print(alphas[(x,y,z)][(min(u,v),max(u,v))])
+
+
+
+                # for z in cand_array:
+                #     for x in range(0,len(curr_V)):
+                #         for y in range(0,len(curr_V)):
+                #             if y <= x and z in [x,y]:
+                #                 continue
+                #             print("------------------")
+                #             print(str(x) + "," + str(y) + ":" + str(z))
+                #             for u in range(0,len(curr_V)):
+                #                 for v in range(u,len(curr_V)):
+                #                     if u not in [x,y,z] and v not in [x,y,z] and u != v:
+                #                         print(str(u) + "-" + str(v) + ":")
+                #                         print(alphas[(x,y,z)][(u,v)])
+
+            elif("e" in dec_string or "E" in dec_string):
+                cand_string_3 = input("Please enter three numbers to examine chosen pairs alpha witnesses.")
+                cand_tuple = [int(x) for x in cand_string_3.split(",")]
+                # nodes_here = [x for x in range(0,curr_N)]
+                cands = rec.rank_candidates(curr_D.copy(),curr_V.copy())
+                out_table = rnf_candidates_table(cand_tuple[0],cand_tuple[1],cand_tuple[2],cands,curr_V)
+
+                print("\n\n----------------------------------------------------\n")
+                print(out_table)
+                print("\n----------------------------------------------------\n\n")
 
             elif("t" in dec_string or "T" in dec_string):
                 for i in range(0,len(agree_cand)):

@@ -916,9 +916,9 @@ def visualize_splitstree(indist,outnex,outpng,elem_arr):
                 u=e
                 break
 
-    # beta_xz_yu = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(z)]-dist[elem_arr.index(y),elem_arr.index(u)])
+    beta_xz_yu = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(z)]-dist[elem_arr.index(y),elem_arr.index(u)])
 
-    # beta_xu_yz = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(u)]-dist[elem_arr.index(y),elem_arr.index(z)])
+    beta_xu_yz = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(u)]-dist[elem_arr.index(y),elem_arr.index(z)])
 
 
     importfile=str(pathlib.Path().resolve())+"/"+outnex
@@ -956,27 +956,27 @@ def visualize_splitstree(indist,outnex,outpng,elem_arr):
     subprocess.call("/scratch/bruno/SplitsTree/splitstree4/./SplitsTreeCMD -c " + "splitstree_commands.nex" ,shell=True)
     subprocess.call("firefox " + str(pathlib.Path().resolve())+"/"+outpng,shell=True)
 
-    # print(x)
-    # print(y)
-    # print(u)
-    # print(z)
-    # swp = u
-    # u = z
-    # z = swp
-    # print("!!!!!!!!!!!!!!!!!!")
-    # print(max_tracker)
-    # print("BOXSIDE_1 : " + str(beta_xz_yu))
-    # print("BOXSIDE_2 : " + str(beta_xu_yz))
+    print(x)
+    print(y)
+    print(u)
+    print(z)
+    swp = u
+    u = z
+    z = swp
+    print("!!!!!!!!!!!!!!!!!!")
+    print(max_tracker)
+    print("BOXSIDE_1 : " + str(beta_xz_yu))
+    print("BOXSIDE_2 : " + str(beta_xu_yz))
 
-    # print(x)
-    # print(y)
-    # print(u)
-    # print(z)
-    # beta_xz_yu = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(z)]-dist[elem_arr.index(y),elem_arr.index(u)])
-    #
-    # beta_xu_yz = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(u)]-dist[elem_arr.index(y),elem_arr.index(z)])
-    # print("BOXSIDE_1_perm : " + str(beta_xz_yu))
-    # print("BOXSIDE_2_perm : " + str(beta_xu_yz))
+    print(x)
+    print(y)
+    print(u)
+    print(z)
+    beta_xz_yu = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(z)]-dist[elem_arr.index(y),elem_arr.index(u)])
+
+    beta_xu_yz = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(u)]-dist[elem_arr.index(y),elem_arr.index(z)])
+    print("BOXSIDE_1_perm : " + str(beta_xz_yu))
+    print("BOXSIDE_2_perm : " + str(beta_xu_yz))
 
     print("!!!!!!!!!!!!!!!!!")
 
