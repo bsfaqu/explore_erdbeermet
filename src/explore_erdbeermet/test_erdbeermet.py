@@ -9,7 +9,8 @@ from sys import argv
 import sys
 from itertools import permutations
 import random
-from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new, compare_candidates, test_deltas_new, visualize_splitstree
+from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new, compare_candidates, test_deltas_new, visualize_splitstree, get_boxes
+import matplotlib.pyplot as plt
 
 
 def rev_a_val(D,a,x,y,z,u,v):
@@ -79,7 +80,7 @@ def rnf_candidates_table(x,y,z,candidates,nodes):
                     out_table += str(round(candidates[(min(x,y),max(x,y),z)][(min(u,v),max(u,v))],2))+"\t"
         out_table += "\n"
 
-    out_table += "\n\n******************************************** \n\n"    
+    out_table += "\n\n******************************************** \n\n"
     out_table += str((x,y,z)) + "\t"
     for u in nodes:
         if(u in [x,y,z]):
@@ -203,7 +204,8 @@ curr_V=[]
 D_original = []
 
 # subprocess.call("start firefox file:///C:/Users/Brujo/Documents/GitHub/explore_erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
-subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+# subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+subprocess.call("google-chrome output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
 
 
 overview_str=""
@@ -561,6 +563,69 @@ while True:
                 t=rnf_candidates(rec.rank_candidates(curr_D,curr_V))
                 agree_cand=t[0]
                 agree_cand_alphas=t[1]
+
+            elif("d" in dec_string or "D" in dec_string):
+                for i in range(0,len(agree_cand)):
+                    print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                cand_string = input("Please enter the number of the candidate pair to examine.")
+                choice = int(cand_string)
+
+                chosen_child = agree_cand[choice][2]
+
+                deltas_zs = []
+
+                for x in range(0,len(curr_D)):
+                    for y in range(0,len(curr_D)):
+
+                        if x == y or x == chosen_child or y == chosen_child or x > y:
+                            continue
+
+                        dz = rec._compute_delta_z(curr_D[x,y],curr_D[x,chosen_child],curr_D[y,chosen_child])
+
+                        deltas_zs += [(x,y,dz)]
+
+                print("------------------------")
+
+                deltas_zs = sorted(deltas_zs,key=lambda x: x[2])
+
+                for t in deltas_zs:
+                    print(t)
+
+                time = [x for x in range(0,len(deltas_zs))]
+                data = [x[2] for x in deltas_zs]
+
+                print("------------------------")
+                func_arr = []
+
+                for u in range(0,len(curr_D)):
+                    if u == agree_cand[choice][0] or u == agree_cand[choice][1] or u == chosen_child:
+                        continue
+                    t = get_boxes(curr_D,[agree_cand[choice][0],agree_cand[choice][1],agree_cand[choice][2],u],agree_cand[choice][0],agree_cand[choice][1],agree_cand[choice][2],u,agree_cand_alphas[choice])
+                    func_arr += [t]
+
+                func_arr = sorted(func_arr,key=lambda x: x[1])
+
+                print("*******************")
+                for t in func_arr:
+                    print(t)
+                print("*******************")
+
+                time = [x[1] for x in func_arr]
+                data = [x[0] for x in func_arr]
+
+                fig, ax = plt.subplots()
+                ax.plot(time,data)
+
+                ax.set(xlabel="time",ylabel="delta_z",title="maybe we see something, maybe we dont")
+                ax.grid()
+
+                fig.savefig("PLOTTING_DELTAS.png")
+                plt.show()
+
+
+
+
             elif('g' in dec_string or 'G' in dec_string):
                 all_alphas = rec.rank_candidates(curr_D,curr_V)
                 for i in range(0,len(agree_cand)):

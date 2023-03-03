@@ -873,6 +873,60 @@ def test_deltas_new(distance,alpha_f,alpha_d,b,e,f,a,c,d):
     print(deltas_d)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
+def get_boxes(distance,elem_arr,chosen_x,chosen_y,chosen_z,chosen_u,alpha):
+    max_tracker = (-1,-1,0)
+
+    x=0
+    y=0
+    z=0
+    u=0
+
+
+    for x in elem_arr:
+        for y in elem_arr:
+            if(y==x):
+                continue
+            for x_1 in elem_arr:
+                for x_2 in elem_arr:
+                    if x_1 in [x,y] or x_2 in [x,y] or x_1==x_2:
+                        continue
+                    if(distance[x,y]+distance[x_1,x_2] > max_tracker[2]):
+                        max_tracker = (x,y,distance[x,y]+distance[x_1,x_2])
+
+    corner_0=[max_tracker[0],max_tracker[1]]
+    corner_1 = [e for e in elem_arr if e not in corner_0]
+
+    beta_y = -1
+
+    beta_xu_zy = -1
+
+    if chosen_y in corner_0:
+        beta_y = 0.5 * (distance[chosen_y,corner_1[0]]+distance[chosen_y,corner_1[1]]-distance[corner_1[0],corner_1[1]])
+        beta_xu_zy = 0.5 * ( distance[corner_0[0],corner_0[1]] + distance[corner_1[0], corner_1[1]] - distance[chosen_y,chosen_z] - distance[chosen_x,chosen_u] )
+    else:
+        beta_y = 0.5 * (distance[chosen_y,corner_0[1]]+distance[chosen_y,corner_0[1]]-distance[corner_0[0],corner_0[1]])
+        beta_xu_zy = 0.5 * ( distance[corner_0[0],corner_0[1]] + distance[corner_1[0], corner_1[1]] - distance[chosen_y,chosen_z] - distance[chosen_x,chosen_u] )
+
+
+    m = (-alpha/(alpha-1))
+
+    return m*beta_xu_zy+beta_y,beta_xu_zy,chosen_x,chosen_y,chosen_z,chosen_u
+
+
+    # for e in elem_arr:
+    #     if(e not in [x,y]):
+    #         z=e
+    #         break
+    # for e in elem_arr:
+    #     if(e not in [x,y,z]):
+    #         u=e
+    #         break
+    #
+    # beta_xz_yu = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(z)]-dist[elem_arr.index(y),elem_arr.index(u)])
+    #
+    # beta_xu_yz = 0.5*(dist[elem_arr.index(x),elem_arr.index(y)]+dist[elem_arr.index(u),elem_arr.index(z)]-dist[elem_arr.index(x),elem_arr.index(u)]-dist[elem_arr.index(y),elem_arr.index(z)])
+
+
 def visualize_splitstree(indist,outnex,outpng,elem_arr):
 
     dist_str=""
@@ -954,7 +1008,8 @@ def visualize_splitstree(indist,outnex,outpng,elem_arr):
         f.write("EXPORTGRAPHICS format=PNG file="+str(pathlib.Path().resolve())+"/"+outpng+" REPLACE=yes;\n")
         f.write("QUIT\n")
     subprocess.call("/scratch/bruno/SplitsTree/splitstree4/./SplitsTreeCMD -c " + "splitstree_commands.nex" ,shell=True)
-    subprocess.call("firefox " + str(pathlib.Path().resolve())+"/"+outpng,shell=True)
+    # subprocess.call("firefox " + str(pathlib.Path().resolve())+"/"+outpng,shell=True)
+    subprocess.call("google-chrome " + str(pathlib.Path().resolve()) + "/" + outpng, shell=True)
 
     print(x)
     print(y)

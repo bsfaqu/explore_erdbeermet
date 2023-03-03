@@ -126,7 +126,7 @@ for t in range(2, len(lines) - 1):
 
     # Initialize matrix with "base distance" d0xy
     # For the root once we reached iteration 4
-    if (iterations == 4):
+    if (iterations == 5):
         for x in range(0, len(seen)):
             for y in range(0, len(seen)):
                 if x == y:
