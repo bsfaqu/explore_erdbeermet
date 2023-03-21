@@ -564,6 +564,31 @@ while True:
                 agree_cand=t[0]
                 agree_cand_alphas=t[1]
 
+            elif "l" in dec_string or "L" in dec_string:
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+                tuple_data = []
+
+                for z in curr_V:
+                    z_min = -1
+                    parent_tuple = []
+
+                    for x in curr_V:
+                        for y in curr_V:
+                            if x == y or x == z or y == z:
+                                continue
+                            dz = rec._compute_delta_z(curr_D[x, y], curr_D[x, z], curr_D[y, z])
+
+                            if dz < z_min or z_min < 0:
+                                z_min = dz
+                                parent_tuple = (x, y, z)
+                    tuple_data += [[parent_tuple, z_min]]
+
+                for t in tuple_data:
+                    print(str(t[0]) + " --- " + str(t[1]))
+
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
             elif("d" in dec_string or "D" in dec_string):
                 for i in range(0,len(agree_cand)):
                     print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
