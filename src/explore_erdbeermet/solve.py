@@ -16,6 +16,110 @@ def rev_a_val(D, a, x, y, z, u):
     return ((-a * D[x, z] + a * D[z, y] + a * D[x, y] + D[u, z] - D[z, y] - D[u, y]) / (
                 2 * a * D[x, y] + D[u, x] - D[u, y] - D[x, y]))
 
+def list_deltas(curr_V,curr_D):
+    tuple_data = []
+
+    for z in curr_V:
+        z_min = -1
+        parent_tuple = []
+
+        for x in curr_V:
+            for y in curr_V:
+                if x == y or x == z or y == z:
+                    continue
+                dz = rec._compute_delta_z(curr_D[x, y], curr_D[x, z], curr_D[y, z])
+
+                if dz < z_min or z_min == -1:
+                    z_min = dz
+                    parent_tuple = [(x, y, z)]
+                if np.isclose(dz, z_min):
+                    parent_tuple += [(x, y, z)]
+        tuple_data += [[parent_tuple, z_min]]
+
+    return tuple_data
+
+def check_linearity(nodes, curr_D, x, y, z, alpha, print_info=False):
+
+    # print("++++++++++++++++")
+    # print(nodes)
+    # print(curr_D)
+    # print(x)
+    # print(y)
+    # print(z)
+    # print(alpha)
+    # print("++++++++++++++++")
+
+    func_arr = []
+
+    first_u = True
+
+    for u in range(0, len(curr_D)):
+        if u == x or u == y or u == z:
+            continue
+        if first_u:
+            deltas = rec._compute_deltas(nodes, curr_D, alpha, x, y, z, u)
+            first_u = False
+        t = get_boxes(curr_D, [x, y, z, u], x, y, z, u, alpha)
+        func_arr += [t]
+
+    func_arr = sorted(func_arr, key=lambda x: x[1])
+
+    if print_info:
+        print("*******************")
+        for t in func_arr:
+            print(t)
+        print("*******************")
+
+    time = [x[1] for x in func_arr]
+    data = [x[0] for x in func_arr]
+
+    # CHECK CASES:
+    # START < 0
+    # print(data[0])
+    # print(np.isclose(data[0], 0.0))
+
+    if data[0] < 0 and not np.isclose(data[0], 0.0):
+        if print_info:
+            print("NEGATIVE START")
+        return False
+
+    for i in range(0,len(time)-1):
+        if (time[i] == time[i+1] and not np.isclose(data[i], data[i+1])) or (data[i]>data[i+1] and not np.isclose(data[i], data[i+1])):
+            if print_info:
+                print("NOT MONOTONIC RISING")
+            return False
+
+    m2 = 0
+
+    if np.isclose(data[0], data[1]):
+        m2 = (data[-1] - data[0]) / (time[-1] - time[0])
+    else:
+        m2 = (data[1] - data[0]) / (time[1] - time[0])
+
+    for i in range(0, len(time)-1):
+
+        diff = time[i+1]-time[i]
+
+        # print("------------")
+        # print("datapoint0: " + str(data[i]))
+        # print("datapoint1: " + str(data[i+1]))
+        # print("alpha: " +  str(alpha))
+        # print("m: " + str(m))
+        # print("m2: " + str(m2))
+        # print("difference: " + str(diff))
+        # print("anstieg: " + str(m*diff))
+        # print("anstieg: " + str(m2 * diff))
+
+        if not np.isclose(data[i+1], data[i] + m2*diff):
+            if print_info:
+                print("NOT LINEAR")
+            return False
+
+    if print_info:
+        print("SUCCESSFUL!")
+    return True
+
+
 def generate_biased_scenario_minor(n):
     # init output and alphabet
     scen_string = ""
@@ -127,80 +231,91 @@ def generate_biased_scenario(n):
         already_added += [c]
     # print(scen_string[0:-1])
     return scen_string[0:-1]
+
+# OLD RANDOM GENERATION - STILL NOT SURE WHICH ONE IS RIGHT!
+# def generate_random_scenario(n):
+#     # init output and alphabet
+#     scen_string = ""
+#     alphabet = "abcdefghijklmnopqrstuvwxyz"
+#     already_added = []
+#
+#     # add participating letters to first line
+#     for i in range(0, n):
+#         scen_string += alphabet[i] + ","
+#
+#     # remove last comma, add starting element (a)
+#     scen_string = scen_string[0:-1]
+#     scen_string += "\n"
+#     scen_string += alphabet[0]
+#     scen_string += "\n"
+#
+#     # the first step is always direct branching of a (random deltas)
+#     # .0 is added at the end since otherwise float point calculations fail
+#     scen_string += "a,a,b;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
+#         random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+#     already_added += ["a"]
+#     already_added += ["b"]
+#
+#     # randomly draw parents, add new child letters,
+#     # parameters are generated randomly.
+#     for i in range(2, n):
+#
+#         p_0 = already_added[random.randint(0, len(already_added) - 1)]
+#         p_1 = copy.copy(p_0)
+#
+#         while p_1 == p_0:
+#             p_1 = already_added[random.randint(0, len(already_added) - 1)]
+#
+#         c = alphabet[i]
+#
+#         alpha = round(random.random(), 5)
+#         del_0 = random.randint(0, 10)
+#         del_1 = random.randint(0, 10)
+#         del_2 = random.randint(0, 10)
+#
+#         scen_string += p_0 + "," + p_1 + "," + c + ";" + str(alpha) + "," + str(del_0) + ".0," + str(
+#             del_1) + ".0," + str(del_2) + ".0\n"
+#         already_added += [c]
+#     # print(scen_string[0:-1])
+#     return scen_string[0:-1]
+
+
 def generate_random_scenario(n):
-    # init output and alphabet
     scen_string = ""
     alphabet = "abcdefghijklmnopqrstuvwxyz"
     already_added = []
 
-    # add participating letters to first line
     for i in range(0, n):
         scen_string += alphabet[i] + ","
 
-    # remove last comma, add starting element (a)
     scen_string = scen_string[0:-1]
     scen_string += "\n"
     scen_string += alphabet[0]
     scen_string += "\n"
 
-    # the first step is always direct branching of a (random deltas)
-    # .0 is added at the end since otherwise float point calculations fail
     scen_string += "a,a,b;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
-        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
-    already_added += ["a"]
-    already_added += ["b"]
-
-    # randomly draw parents, add new child letters,
-    # parameters are generated randomly.
-    for i in range(2, n):
-
-        p_0 = already_added[random.randint(0, len(already_added) - 1)]
-        p_1 = copy.copy(p_0)
-
-        while p_1 == p_0:
-            p_1 = already_added[random.randint(0, len(already_added) - 1)]
-
-        c = alphabet[i]
-
-        alpha = round(random.random(), 5)
-        del_0 = random.randint(0, 10)
-        del_1 = random.randint(0, 10)
-        del_2 = random.randint(0, 10)
-
-        scen_string += p_0 + "," + p_1 + "," + c + ";" + str(alpha) + "," + str(del_0) + ".0," + str(
-            del_1) + ".0," + str(del_2) + ".0\n"
-        already_added += [c]
-    # print(scen_string[0:-1])
-    return scen_string[0:-1]
-
-
-def generate_random_scenario(n):
-    scen_string = ""
-    alphabet = "abcdefghijklmnopqrstuvwxyz"
-    already_added = []
-
-    for i in range(0, n):
-        scen_string += alphabet[i] + ","
-    scen_string = scen_string[0:-1]
-    scen_string += "\n"
-    scen_string += alphabet[0]
-    scen_string += "\n"
-
-    scen_string += "a,a,b;" + str(round(random.random(), 5)) + "," + str(random.randint(0, 10)) + ".0," + str(
-        random.randint(0, 10)) + ".0," + str(random.randint(0, 10)) + ".0\n"
+        random.randint(0, 10)) + ".0," + str(random.randint(1, 10)) + ".0\n"
     already_added += ["a"]
     already_added += ["b"]
 
     for i in range(2, n):
         p_0 = already_added[random.randint(0, len(already_added) - 1)]
         p_1 = copy.copy(p_0)
+
         while p_1 == p_0:
             p_1 = already_added[random.randint(0, len(already_added) - 1)]
         c = alphabet[i]
-        alpha = round(random.random(), 5)
-        del_0 = round(round(random.random(), 5) * random.randint(0, 10), 5)
-        del_1 = round(round(random.random(), 5) * random.randint(0, 10), 5)
-        del_2 = round(round(random.random(), 5) * random.randint(0, 10), 5)
+
+        r = random.random()
+
+        if r < 0.2 and i > 4:
+            alpha = 1.0
+        else:
+            alpha = round(random.random(), 5)
+
+        del_0 = round(round(random.random(), 5) * random.randint(1, 10), 5)
+        del_1 = round(round(random.random(), 5) * random.randint(1, 10), 5)
+        del_2 = round(round(random.random(), 5) * random.randint(1, 10), 5)
         # del_0=0
         # del_1=0
         # scen_string += p_0 + "," + p_1 + "," + c + ";"+ str(alpha) + "," + str(del_0) + ".0," + str(del_1) + ".0," + str(del_2) + ".0\n"
@@ -292,7 +407,8 @@ def rnf_candidates(candidates):
 
 def make_distance_matrix(scenario):
     lines = scenario.split("\n")
-    dist = [[0 for x in range(0, len(lines[0].split(",")))] for x in range(0, len(lines[0].split(",")))]
+    # dist = [[0 for x in range(0, len(lines[0].split(",")))] for x in range(0, len(lines[0].split(",")))]
+    dist = np.zeros((len(lines[0].split( ",")), len(lines[0].split(","))), dtype="f16")
     nodes = [x for x in range(0, len(dist))]
     alphabet = "abcdefghijklmnopqrstuvwxyz"
     seen = set()
@@ -873,6 +989,9 @@ def test_deltas_new(distance,alpha_f,alpha_d,b,e,f,a,c,d):
     print(deltas_d)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
+def get_beta_function(distance,x,y,z):
+    pass
+
 def get_boxes(distance,elem_arr,chosen_x,chosen_y,chosen_z,chosen_u,alpha):
     max_tracker = (-1,-1,0)
 
@@ -890,7 +1009,8 @@ def get_boxes(distance,elem_arr,chosen_x,chosen_y,chosen_z,chosen_u,alpha):
                 for x_2 in elem_arr:
                     if x_1 in [x,y] or x_2 in [x,y] or x_1==x_2:
                         continue
-                    if(distance[x,y]+distance[x_1,x_2] > max_tracker[2]):
+                    # print(str([x,y]) + " - " + str(distance[x,y]+distance[x_1,x_2]))
+                    if(distance[x,y]+distance[x_1,x_2] > max_tracker[2]) and not np.isclose(distance[x,y]+distance[x_1,x_2], max_tracker[2]):
                         max_tracker = (x,y,distance[x,y]+distance[x_1,x_2])
 
     corner_0=[max_tracker[0],max_tracker[1]]
@@ -910,7 +1030,66 @@ def get_boxes(distance,elem_arr,chosen_x,chosen_y,chosen_z,chosen_u,alpha):
 
     m = (-alpha/(alpha-1))
 
+    # print(max_tracker)
+    # print(corner_0)
+    # print(corner_1)
+    # print(m)
+    # print(beta_xu_zy)
+    # print(beta_y)
+    # print(m*beta_xu_zy+beta_y)
+
     return m*beta_xu_zy+beta_y,beta_xu_zy,chosen_x,chosen_y,chosen_z,chosen_u
+
+def get_boxes_correct(distance, elem_arr, chosen_x, chosen_y, chosen_z, chosen_u, alpha):
+    max_tracker = (-1, -1, 0)
+
+    x = 0
+    y = 0
+    z = 0
+    u = 0
+
+    for x in elem_arr:
+        for y in elem_arr:
+            if (y == x):
+                continue
+            for x_1 in elem_arr:
+                for x_2 in elem_arr:
+                    if x_1 in [x, y] or x_2 in [x, y] or x_1 == x_2:
+                        continue
+                    # print(str([x,y]) + " - " + str(distance[x,y]+distance[x_1,x_2]))
+                    if (distance[x, y] + distance[x_1, x_2] > max_tracker[2]) and not np.isclose(
+                            distance[x, y] + distance[x_1, x_2], max_tracker[2]):
+                        max_tracker = (x, y, distance[x, y] + distance[x_1, x_2])
+
+    corner_0 = [max_tracker[0], max_tracker[1]]
+    corner_1 = [e for e in elem_arr if e not in corner_0]
+
+    beta_y = -1
+
+    beta_xu_zy = -1
+
+    if chosen_y in corner_0:
+        beta_y = 0.5 * (distance[chosen_y, corner_1[0]] + distance[chosen_y, corner_1[1]] - distance[
+            corner_1[0], corner_1[1]])
+        beta_xu_zy = 0.5 * (distance[corner_0[0], corner_0[1]] + distance[corner_1[0], corner_1[1]] - distance[
+            chosen_y, chosen_z] - distance[chosen_x, chosen_u])
+    else:
+        beta_y = 0.5 * (distance[chosen_y, corner_0[1]] + distance[chosen_y, corner_0[1]] - distance[
+            corner_0[0], corner_0[1]])
+        beta_xu_zy = 0.5 * (distance[corner_0[0], corner_0[1]] + distance[corner_1[0], corner_1[1]] - distance[
+            chosen_y, chosen_z] - distance[chosen_x, chosen_u])
+
+    m = (-alpha / (alpha - 1))
+
+    # print(max_tracker)
+    # print(corner_0)
+    # print(corner_1)
+    # print(m)
+    # print(beta_xu_zy)
+    # print(beta_y)
+    # print(m*beta_xu_zy+beta_y)
+
+    return m * beta_xu_zy + beta_y, beta_xu_zy, chosen_x, chosen_y, chosen_z, chosen_u
 
 
     # for e in elem_arr:
@@ -1727,10 +1906,152 @@ def solve_greedy_matrix_only(distance, report_dead_ends=False, print_info=True):
     return (True, "")
 
 
+def solve_greedy_carsten(distance, report_dead_ends=False, print_info=False):
+
+    # CREATE SCENARIO AND SCENARIO REPRESENTING GRAPH FOR CHECKING IF ANY ACTIVE ANCESTORS ARE REMOVED.
+
+    nodes = [x for x in range(0, len(distance))]
+
+    distance = np.asarray(distance)
+    swap_distance = distance.copy()
+
+    while len(distance) > 4:
+
+        # if print_info:
+        #     print("----------PRE:---------")
+        #     print(distance)
+
+        if len(distance) == 5:
+            swap_distance = distance.copy()
+
+        all_alphas = rank_candidates(distance, nodes)
+
+        agree_cand, agree_cand_alphas = rnf_candidates(all_alphas)
+
+        delta_list = list_deltas(nodes, distance)
+
+        if print_info:
+            print("----")
+            print(str(len(distance)) + " LEAVES LEFT!")
+            print("CANDIDATES - " + str(agree_cand))
+            
+        if len(agree_cand) == 0:
+            if print_info:
+                print("NO AGREE CANDIDATES FOUND")
+            return False, "AGREE_CANDIDATES_EMPTY"
+            
+        agree_fail = False
+
+        for i in range(0,len(agree_cand)):
+            # print(agree_cand)
+            # print(i)
+            c = agree_cand[i]
+            alpha = agree_cand_alphas[i]
+            # print(c)
+
+            x = c[0]
+            y = c[1]
+            z = c[2]
+
+            if print_info:
+                print("Checking " + str(c))
+
+            # Not a valid candidate!
+            if (x, y, z) not in delta_list[z][0] or z in [0,1,2,3] or not check_linearity(nodes, distance, x, y, z, alpha, print_info=print_info):
+                if print_info:
+                    print("FAILED")
+                if i == len(agree_cand)-1:
+                    return False, "NO_CANDIDATE_AVAILABLE"
+                continue
+            if print_info:
+                print("SUCCESSFUL!")
+            # potentially valid candidate
+            u_arr = [j for j in nodes if j not in [x, y, z]]
+            # print(u_arr)
+            # print(nodes)
+
+            deltas = rec._compute_deltas(nodes, distance, alpha, x, y, z, u_arr[0])
+
+            if deltas[0] < 0 and not np.isclose(deltas[0],0.0) and len(distance) > 5:
+                if print_info:
+                    print("FAILED")
+                agree_fail = True
+                continue
+            if deltas[2] < 0 and not np.isclose(deltas[2], 0.0) and len(distance) > 5:
+                if print_info:
+                    print("FAILED")
+                agree_fail = True
+                continue
+            if deltas[3] < 0 and not np.isclose(deltas[3], 0.0) and len(distance) > 5:
+                if print_info:
+                    print("FAILED")
+                agree_fail = True
+                continue
+
+            distance_copy = rec._matrix_without_index(distance.copy(), nodes.index(z))
+            nodes = nodes[0:-1]
+
+            if z < x:
+                x-=1
+            if z < y:
+                y-=1
+
+            distance_copy = rec._update_matrix_return(nodes, distance_copy, x, y, deltas[2], deltas[3])
+
+            check = check_triangle(distance_copy, x, y, z, [j for j in agree_cand if j != (x, y, z)], print_info=print_info)
+            
+            if not check:
+
+                nodes += [len(nodes)]
+
+                if i == len(agree_cand)-1:
+                    return False, "NO_CANDIDATE_AVAILABLE"
+                else:
+                    continue
+
+            distance = distance_copy.copy()
+
+            # if print_info:
+            #     print("----------POST REMOVAL:---------")
+            #     print(distance)
+
+            # distance = rec._update_matrix_return(nodes, distance, x, y, deltas[2], deltas[3])
+
+            if len(distance) == 4:
+                check = is_pseudometric(distance, print_info=print_info, return_info=True)
+                if check[0]:
+                    break
+                else:
+                    if i != len(agree_cand)-1:
+                        distance = swap_distance.copy()
+                        nodes = [j for j in range(0, len(distance))]
+                        continue
+                    else:
+                        return False, "NO_PSEUDOMETRIC_LAST_4"
+            break
+
+        check = is_pseudometric(distance, print_info=print_info, return_info=True)
+
+        if not check[0]:
+            if print_info:
+                print(check)
+                print("FAILED!")
+            return False, "NO_PSEUDOMETRIC"
+
+        if agree_fail:
+            return False, "NO_CANDIDATES"
+
+    if print_info:
+        print("SUCCESS")
+    return True, "SUCCESS"
+    # TODO CREATE GRAPH TOO AND SEE IF WE REMOVE ANY LEAF WITH ACTIVE ANCESTORS AT SOME POINT.
+    pass
+
+
 if __name__ == '__main__':
 
     base_string = "EXAMPLE_"
-    invalid_counter = 7
+    invalid_counter = 0
 
     general_counter = 0
 
@@ -1743,12 +2064,22 @@ if __name__ == '__main__':
 
     while (True):
         print("RUN " + str(general_counter))
+        print("INVALIDS:" + str(invalid_counter) + " / " + str(general_counter))
         general_counter += 1
-        check = solve_greedy(9, path + base_string + str(invalid_counter) + ".txt", print_info=False,
-                             report_dead_ends=False)
+
+        # scen = generate_random_scenario(9)
+
+        scen = generate_random_scenario(9)
+        distance = make_distance_matrix(scen)
+        check = solve_greedy_carsten(distance, print_info=False)
+
+        # check = solve_greedy(9, path + base_string + str(invalid_counter) + ".txt", print_info=False,
+        #                      report_dead_ends=False)
         if check[0]:
             pass
         else:
+            with open(path + "EXAMPLE_" + str(invalid_counter) + "_" + str(check[1]) + ".txt", "w+") as f:
+                f.write(scen)
             invalid_counter += 1
         if (general_counter > 1000000):
             break

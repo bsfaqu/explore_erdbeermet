@@ -9,7 +9,7 @@ from sys import argv
 import sys
 from itertools import permutations
 import random
-from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new, compare_candidates, test_deltas_new, visualize_splitstree, get_boxes
+from solve import check_candidate,check_simple_6,rank_candidates, rev_a_checking_new, compare_candidates, test_deltas_new, visualize_splitstree, get_boxes, check_linearity
 import matplotlib.pyplot as plt
 
 
@@ -204,8 +204,8 @@ curr_V=[]
 D_original = []
 
 # subprocess.call("start firefox file:///C:/Users/Brujo/Documents/GitHub/explore_erdbeermet/output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
-# subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
-subprocess.call("google-chrome output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+subprocess.call("firefox output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
+# subprocess.call("google-chrome output/vis_all.pdf &", shell=True,stdout=subprocess.DEVNULL)
 
 
 overview_str=""
@@ -556,7 +556,7 @@ while True:
 
 
 
-            elif("x" in dec_string or "X" in dec_string):
+            elif "x" in dec_string or "X" in dec_string:
                 curr_D = D_original.copy()
                 curr_V = [i for i in range(0,len(curr_D))]
                 curr_N = len(curr_D)-1
@@ -579,57 +579,82 @@ while True:
                                 continue
                             dz = rec._compute_delta_z(curr_D[x, y], curr_D[x, z], curr_D[y, z])
 
-                            if dz < z_min or z_min < 0:
+                            if dz < z_min or z_min == -1:
                                 z_min = dz
-                                parent_tuple = (x, y, z)
+                                parent_tuple += [(x, y, z)]
                     tuple_data += [[parent_tuple, z_min]]
 
+                # for z in curr_V:
+                #     z_min = -1
+                #     parent_tuple = []
+                #
+                #     for x in curr_V:
+                #         for y in curr_V:
+                #             if x == y or x == z or y == z:
+                #                 continue
+                #             dz = rec._compute_delta_z(curr_D[x, y], curr_D[x, z], curr_D[y, z])
+                #
+                #             if dz < z_min or z_min == -1:
+                #                 z_min = dz
+                #                 parent_tuple = (x, y, z)
+                #     tuple_data += [[parent_tuple, z_min]]
+
                 for t in tuple_data:
-                    print(str(t[0]) + " --- " + str(t[1]))
+                    for rstep in t[0]:
+                        print(str(rstep) + " --- " + str(t[1]))
 
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-            elif("d" in dec_string or "D" in dec_string):
-                for i in range(0,len(agree_cand)):
-                    print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
+            elif ("d" in dec_string or "D" in dec_string):
+                for i in range(0, len(agree_cand)):
+                    print("[" + str(i) + "] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 cand_string = input("Please enter the number of the candidate pair to examine.")
-                choice = int(cand_string)
+                # choice = int(cand_string)
 
-                chosen_child = agree_cand[choice][2]
+                lparent = int(cand_string.split(",")[0])
+                rparent = int(cand_string.split(",")[1])
+                chosen_child = int(cand_string.split(",")[2])
+
+                # chosen_child = choice
 
                 deltas_zs = []
 
-                for x in range(0,len(curr_D)):
-                    for y in range(0,len(curr_D)):
+                for x in range(0, len(curr_D)):
+                    for y in range(0, len(curr_D)):
 
                         if x == y or x == chosen_child or y == chosen_child or x > y:
                             continue
 
-                        dz = rec._compute_delta_z(curr_D[x,y],curr_D[x,chosen_child],curr_D[y,chosen_child])
+                        dz = rec._compute_delta_z(curr_D[x, y], curr_D[x, chosen_child], curr_D[y, chosen_child])
 
-                        deltas_zs += [(x,y,dz)]
+                        deltas_zs += [(x, y, dz)]
 
                 print("------------------------")
 
-                deltas_zs = sorted(deltas_zs,key=lambda x: x[2])
+                deltas_zs = sorted(deltas_zs, key=lambda x: x[2])
 
                 for t in deltas_zs:
                     print(t)
 
-                time = [x for x in range(0,len(deltas_zs))]
+                time = [x for x in range(0, len(deltas_zs))]
                 data = [x[2] for x in deltas_zs]
 
                 print("------------------------")
                 func_arr = []
+                alpha = 0.0
 
-                for u in range(0,len(curr_D)):
-                    if u == agree_cand[choice][0] or u == agree_cand[choice][1] or u == chosen_child:
-                        continue
-                    t = get_boxes(curr_D,[agree_cand[choice][0],agree_cand[choice][1],agree_cand[choice][2],u],agree_cand[choice][0],agree_cand[choice][1],agree_cand[choice][2],u,agree_cand_alphas[choice])
-                    func_arr += [t]
+                for u in range(0, len(curr_D)):
+                    for v in range(0, len(curr_D)):
+                        if u == lparent or u == rparent or u == chosen_child or v == lparent or v == rparent or v == chosen_child:
+                            continue
+                        alpha = rec._compute_alpha([x for x in range(0,len(curr_D))], curr_D, lparent, rparent, chosen_child, u, v)
+                        t = get_boxes(curr_D, [lparent, rparent, chosen_child, u],
+                                      lparent, rparent, chosen_child, u,
+                                      rec._compute_alpha([x for x in range(0,len(curr_D))], curr_D, lparent, rparent, chosen_child, u, v))
+                        func_arr += [t]
 
-                func_arr = sorted(func_arr,key=lambda x: x[1])
+                func_arr = sorted(func_arr, key=lambda x: x[1])
 
                 print("*******************")
                 for t in func_arr:
@@ -640,13 +665,79 @@ while True:
                 data = [x[0] for x in func_arr]
 
                 fig, ax = plt.subplots()
-                ax.plot(time,data)
+                ax.plot(time, data)
 
-                ax.set(xlabel="time",ylabel="delta_z",title="maybe we see something, maybe we dont")
+                ax.set(xlabel="time", ylabel="delta_z", title="maybe we see something, maybe we dont")
                 ax.grid()
+
+                check_linearity(curr_V, curr_D, lparent, rparent, chosen_child,
+                                alpha, print_info=True)
 
                 fig.savefig("PLOTTING_DELTAS.png")
                 plt.show()
+
+            # elif("d" in dec_string or "D" in dec_string):
+            #     for i in range(0,len(agree_cand)):
+            #         print("["+str(i)+"] - " + str(agree_cand[i]) + " " + str(agree_cand_alphas[i]))
+            #     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+            #     cand_string = input("Please enter the number of the candidate pair to examine.")
+            #     choice = int(cand_string)
+            #
+            #     # chosen_child = agree_cand[choice][2]
+            #
+            #     chosen_child = choice
+            #
+            #     deltas_zs = []
+            #
+            #     for x in range(0,len(curr_D)):
+            #         for y in range(0,len(curr_D)):
+            #
+            #             if x == y or x == chosen_child or y == chosen_child or x > y:
+            #                 continue
+            #
+            #             dz = rec._compute_delta_z(curr_D[x,y],curr_D[x,chosen_child],curr_D[y,chosen_child])
+            #
+            #             deltas_zs += [(x,y,dz)]
+            #
+            #     print("------------------------")
+            #
+            #     deltas_zs = sorted(deltas_zs, key=lambda x: x[2])
+            #
+            #     for t in deltas_zs:
+            #         print(t)
+            #
+            #     time = [x for x in range(0,len(deltas_zs))]
+            #     data = [x[2] for x in deltas_zs]
+            #
+            #     print("------------------------")
+            #     func_arr = []
+            #
+            #     for u in range(0,len(curr_D)):
+            #         if u == agree_cand[choice][0] or u == agree_cand[choice][1] or u == chosen_child:
+            #             continue
+            #         t = get_boxes(curr_D,[agree_cand[choice][0],agree_cand[choice][1],agree_cand[choice][2],u],agree_cand[choice][0],agree_cand[choice][1],agree_cand[choice][2],u,agree_cand_alphas[choice])
+            #         func_arr += [t]
+            #
+            #     func_arr = sorted(func_arr,key=lambda x: x[1])
+            #
+            #     print("*******************")
+            #     for t in func_arr:
+            #         print(t)
+            #     print("*******************")
+            #
+            #     time = [x[1] for x in func_arr]
+            #     data = [x[0] for x in func_arr]
+            #
+            #     fig, ax = plt.subplots()
+            #     ax.plot(time,data)
+            #
+            #     ax.set(xlabel="time",ylabel="delta_z",title="maybe we see something, maybe we dont")
+            #     ax.grid()
+            #
+            #     check_linearity(curr_V, curr_D, agree_cand[choice][0], agree_cand[choice][1], agree_cand[choice][2], agree_cand_alphas[choice], print_info=True)
+            #
+            #     fig.savefig("PLOTTING_DELTAS.png")
+            #     plt.show()
 
 
 
